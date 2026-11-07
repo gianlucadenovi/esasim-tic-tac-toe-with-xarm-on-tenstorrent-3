@@ -6,7 +6,7 @@
     "name": "0 · Robot test (online, joint by joint)",
     "description": "Checks that the xArm answers and is healthy, then moves it one joint at a time, slowly, from the View: J1 − … J6 +, Back to start, Stop.",
     "published_version": 0,
-    "updated": "2026-11-07 20:39:59",
+    "updated": "2026-11-07 21:05:06",
     "graph": {
         "nodes": [
             {
@@ -16,7 +16,7 @@
                 "y": 160,
                 "params": {
                     "robot": "real xArm",
-                    "ip": "192.168.1.200",
+                    "ip": "192.168.1.235",
                     "step": 5,
                     "joint_speed": 10,
                     "joint_accel": 40,
@@ -172,7 +172,32 @@
         ],
         "notes": [],
         "dash": {
-            "items": []
+            "items": {
+                "controls": {
+                    "x": 7,
+                    "y": 0,
+                    "w": 5,
+                    "h": 12
+                },
+                "twin": {
+                    "x": 0,
+                    "y": 0,
+                    "w": 7,
+                    "h": 18
+                },
+                "health": {
+                    "x": 0,
+                    "y": 18,
+                    "w": 12,
+                    "h": 5
+                },
+                "joints": {
+                    "x": 7,
+                    "y": 12,
+                    "w": 5,
+                    "h": 6
+                }
+            }
         }
     }
 }
