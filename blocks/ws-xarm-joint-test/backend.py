@@ -1,5 +1,5 @@
 # ── EsaSim block ──────────────────────────────────────────────────────
-# xArm joint test (ws-xarm-joint-test) · version 2 · machine block, Python: def run(ctx)
+# xArm joint test (ws-xarm-joint-test) · version 3 · machine block, Python: def run(ctx)
 # Checks that the xArm is online and healthy, then moves it one joint at a time, slowly, from the Controls view.
 # Workspace: Gianluca De Novi's workspace · Author: Gianluca De Novi
 # Saved: 2026-11-07
@@ -193,6 +193,21 @@ def run(ctx):
         ctx.telemetry("joints", {"j%d" % (i + 1): round(v, 2) for i, v in enumerate(cur)})
         ctx.telemetry("jog", {"j%d" % (i + 1): "J%d   %+.1f°      (%.0f° to %.0f°)" % (i + 1, v, lo, hi) for i, (v, (lo, hi)) in enumerate(zip(cur, XARM6_LIMITS))})
 
+    def servo_errors():
+        """For a controller error C10-C17 (a joint's motor reports an error): each joint's own code and UFACTORY's
+        description of it, said in the log and in the status."""
+        try:
+            code, msgs = api.get_servo_debug_msg()
+        except Exception as e:
+            ctx.log("The joints' own error codes could not be read (%s)." % e)
+            return []
+        bad = [m for m in (msgs or []) if m.get("code") and int(m.get("servo_id", 9)) <= 7]
+        for m in bad:
+            ctx.log("Joint %s: servo error S%s, %s. UFACTORY says: %s" % (m["servo_id"], m["code"], str(m.get("title", "")).strip(), str(m.get("desc", "")).strip() or "see its manual"))
+        if bad:
+            ctx.telemetry("servo", {"errors": ["J%s S%s %s" % (m["servo_id"], m["code"], str(m.get("title", "")).strip()) for m in bad]})
+        return bad
+
     def health(extra=None):
         h = {"robot": "simulation" if sim else str(p.get("ip"))}
         if not sim:
@@ -226,7 +241,9 @@ def run(ctx):
         ctx.log("Connected: %s" % ", ".join("%s %s" % (k, v) for k, v in info.items() if v not in ("", None)))
         h = health(info)
         if api.error_code:
-            say("The arm reports error %s: press Clear error once the cause is fixed (see UFACTORY's manual for the code)." % api.error_code)
+            bad = servo_errors() if 10 <= int(api.error_code) <= 17 else []
+            say(("The arm reports error C%s: %s. Fix its cause, then press Clear error." % (api.error_code, "; ".join("joint %s has servo error S%s (%s)" % (m["servo_id"], m["code"], str(m.get("title", "")).strip()) for m in bad)))
+                if bad else "The arm reports error C%s: press Clear error once the cause is fixed (see UFACTORY's manual for the code)." % api.error_code)
         else:
             if api.warn_code:
                 ctx.log("Warning %s from the arm, cleared." % api.warn_code)
@@ -318,7 +335,7 @@ def run(ctx):
                     break
                 time.sleep(0.1)
             if api.error_code:
-                say("The arm stopped with error %s. Press Clear error once the cause is fixed." % api.error_code)
+                say("The arm stopped with error C%s. Press Clear error once the cause is fixed." % api.error_code)
                 health()
                 return
         now = angles()
@@ -351,7 +368,11 @@ def run(ctx):
                     api.clean_error(); api.clean_warn(); api.motion_enable(enable=True); api.set_mode(0); api.set_state(state=0)
                     time.sleep(0.5)
                     h = health()
-                    say("Error cleared: ready." if not api.error_code else "The arm still reports error %s." % api.error_code)
+                    if api.error_code and 10 <= int(api.error_code) <= 17:
+                        bad = servo_errors()
+                        say("The arm still reports error C%s%s." % (api.error_code, (": " + "; ".join("joint %s, S%s %s" % (m["servo_id"], m["code"], str(m.get("title", "")).strip()) for m in bad)) if bad else ""))
+                    else:
+                        say("Error cleared: ready." if not api.error_code else "The arm still reports error C%s." % api.error_code)
                     continue
                 if cl == "stop":
                     if not sim:
@@ -359,7 +380,7 @@ def run(ctx):
                     say("Stopped.")
                     continue
                 if not sim and api.error_code:
-                    say("The arm reports error %s: press Clear error first." % api.error_code)
+                    say("The arm reports error C%s: press Clear error first." % api.error_code)
                     continue
                 if cl == "back to start":
                     move(start, "Back to the start pose…")

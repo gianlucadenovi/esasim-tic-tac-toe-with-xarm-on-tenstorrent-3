@@ -6,7 +6,7 @@
     "name": "4 · Calibrate the arm and the camera",
     "description": "The pen touches the board's four corners (dry run first), and the camera checks it finds and straightens the board.",
     "published_version": 0,
-    "updated": "2026-11-07 21:14:52",
+    "updated": "2026-11-07 21:28:55",
     "graph": {
         "nodes": [
             {
@@ -15,7 +15,7 @@
                 "x": -360,
                 "y": -60,
                 "params": {
-                    "ip": "192.168.1.245",
+                    "ip": "192.168.2.245",
                     "action": "touch corners",
                     "dry_run": true,
                     "board_x": 390,
