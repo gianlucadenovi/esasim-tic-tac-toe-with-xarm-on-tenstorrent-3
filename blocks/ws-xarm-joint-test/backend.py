@@ -1,5 +1,5 @@
 # ── EsaSim block ──────────────────────────────────────────────────────
-# xArm joint test (ws-xarm-joint-test) · version 1 · machine block, Python: def run(ctx)
+# xArm joint test (ws-xarm-joint-test) · version 2 · machine block, Python: def run(ctx)
 # Checks that the xArm is online and healthy, then moves it one joint at a time, slowly, from the Controls view.
 # Workspace: Gianluca De Novi's workspace · Author: Gianluca De Novi
 # Saved: 2026-11-07
@@ -94,6 +94,39 @@ def trapezoid(dist, vmax, amax):
     return T, s
 
 
+def reachable(ip):
+    """Why this machine cannot talk to the arm at ip (None when its control port answers): which of its addresses
+    it would use, and whether the arm's port 502 answers, refuses or stays silent."""
+    import socket
+    try:
+        u = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        u.connect((ip, 502))
+        local = u.getsockname()[0]
+        u.close()
+    except OSError as e:
+        return "This machine has no route to %s (%s): give its Ethernet port a fixed address on the arm's network." % (ip, e)
+    net = ip.rsplit(".", 1)[0]
+    if local.rsplit(".", 1)[0] != net:
+        return ("This machine would talk to the arm at %s from its address %s, which is not on the arm's network: the Ethernet port has no address there yet. "
+                "In Windows: Settings > Network & internet > Ethernet > IP assignment > Edit > Manual, IPv4 on, IP address %s.100, subnet mask 255.255.255.0, "
+                "gateway and DNS empty; then ping %s." % (ip, local, net, ip))
+    t = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    t.settimeout(3)
+    try:
+        t.connect((ip, 502))
+        return None
+    except socket.timeout:
+        return ("This machine (address %s) is on the arm's network, but nothing answers at %s: check that the control box is on and its network port's lights are lit, "
+                "that %s is the address on its label, and ping %s. If %s is your Wi-Fi's address, your home network uses the same addresses as the arm: "
+                "turn Wi-Fi off for the test, or move the arm to another network (192.168.2.x) in UFACTORY Studio." % (local, ip, ip, ip, local))
+    except ConnectionRefusedError:
+        return "Something at %s answers but refuses the arm's port: it may be another device with that address, or the controller is still starting. Wait a minute and run again." % ip
+    except OSError as e:
+        return "This machine (address %s) cannot open a connection to %s (%s)." % (local, ip, e)
+    finally:
+        t.close()
+
+
 def run(ctx):
     p = ctx.params
     sim = str(p.get("robot", "real xArm")).lower().startswith("sim")
@@ -180,7 +213,13 @@ def run(ctx):
         from xarm.wrapper import XArmAPI
         ip = str(p.get("ip") or "").strip()
         say("Connecting to the xArm at %s…" % ip)
-        api = XArmAPI(ip, is_radian=False)
+        why = reachable(ip)
+        if why:
+            raise RuntimeError(why)
+        try:
+            api = XArmAPI(ip, is_radian=False)
+        except Exception as e:
+            raise RuntimeError("The arm at %s did not accept the connection (%s). Is UFACTORY Studio or another program connected to it? Close it and run again." % (ip, e))
         if not api.connected:
             raise RuntimeError("Cannot reach the xArm at %s: check that the controller is on, the address, and that this machine is on the arm's network (ping %s)." % (ip, ip))
         info = {"firmware": str(getattr(api, "version", "") or ""), "serial": str(getattr(api, "sn", "") or ""), "axes": getattr(api, "axis", None)}
