@@ -1,0 +1,56 @@
+{
+    "name": "1 · Print the board",
+    "description": "The A4 sheet with the four markers the camera finds the board by. Print it at 100%.",
+    "published_version": 0,
+    "updated": "2026-11-07 04:59:44",
+    "graph": {
+        "nodes": [
+            {
+                "id": "sheet",
+                "type": "ws-board-sheet",
+                "x": 80,
+                "y": 120,
+                "params": {
+                    "board_mm": 140,
+                    "marker_mm": 25,
+                    "dpi": 300
+                },
+                "title": "Board sheet (A4)"
+            },
+            {
+                "id": "show",
+                "type": "image-view",
+                "x": 460,
+                "y": 120,
+                "params": {
+                    "size": "large"
+                },
+                "title": "The sheet"
+            }
+        ],
+        "edges": [
+            {
+                "id": "sheet.sheet>show.images",
+                "from": {
+                    "node": "sheet",
+                    "port": "sheet"
+                },
+                "to": {
+                    "node": "show",
+                    "port": "images"
+                }
+            }
+        ],
+        "notes": [],
+        "dash": {
+            "items": {
+                "show": {
+                    "x": 0,
+                    "y": 0,
+                    "w": 6,
+                    "h": 10
+                }
+            }
+        }
+    }
+}
