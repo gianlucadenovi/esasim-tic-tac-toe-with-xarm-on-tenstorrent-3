@@ -1,0 +1,121 @@
+{
+    "id": "ws-xarm-joint-test",
+    "version": "1",
+    "name": "xArm joint test",
+    "category": "Devices",
+    "icon": "robot-arm",
+    "side": "backend",
+    "customizable": true,
+    "summary": "Checks that the xArm is online and healthy, then moves it one joint at a time, slowly, from the Controls view.",
+    "help": "Connects to the arm at Arm IP address and reports its health (live: health — connected, state, mode, error, warning, hottest joint; the log has the firmware and serial number). Then each press of J1 − … J6 + in a Controls view moves that one joint by Step degrees, at most Joint speed (never more than 30°/s); select step changes the step (at most 15°). Every step is checked before it is sent: the joint stays 5° inside its limits, and the elbow, wrist, flange (and the tool, if Tool length is set) stay at least Clearance above the table. Presses made while the arm moves are dropped. Stop stops the motion at once; Back to start returns every joint to where it was when the test began; Clear error clears the arm's error after you fixed its cause; End test finishes. The controller also limits the joint speed by itself during the test (reduced mode, restored at the end). The arm stays where it is when the test ends. Robot = simulation moves the digital twin only. Controls (channel \"control\"): J1 − … J6 +, step N, Stop, Back to start, Clear error, End test. Live: status, health, joints, jog (one line per joint), scene.",
+    "inputs": [],
+    "outputs": [
+        {
+            "id": "log",
+            "label": "Test log",
+            "type": "table",
+            "formats": [
+                "csv"
+            ],
+            "help": "joint_test.csv: every move asked, refused and reached, with the joint angles"
+        }
+    ],
+    "params": [
+        {
+            "key": "robot",
+            "label": "Robot",
+            "type": "select",
+            "default": "real xArm",
+            "options": [
+                "real xArm",
+                "simulation"
+            ],
+            "help": "simulation: nothing is sent to any arm, the digital twin moves"
+        },
+        {
+            "key": "ip",
+            "label": "Arm IP address",
+            "type": "text",
+            "default": "192.168.1.200"
+        },
+        {
+            "key": "step",
+            "label": "Step (degrees per press)",
+            "type": "number",
+            "default": 5,
+            "min": 0.5,
+            "max": 15
+        },
+        {
+            "key": "joint_speed",
+            "label": "Joint speed (degrees/s)",
+            "type": "number",
+            "default": 10,
+            "min": 1,
+            "max": 30,
+            "help": "Never more than 30"
+        },
+        {
+            "key": "joint_accel",
+            "label": "Joint acceleration (degrees/s²)",
+            "type": "number",
+            "default": 40,
+            "min": 5,
+            "max": 120
+        },
+        {
+            "key": "table_z",
+            "label": "Table height (mm)",
+            "type": "number",
+            "default": 0,
+            "help": "The table's height in the arm's base frame (0: the arm stands on it)"
+        },
+        {
+            "key": "clearance",
+            "label": "Clearance above the table (mm)",
+            "type": "number",
+            "default": 40,
+            "min": 10,
+            "max": 300
+        },
+        {
+            "key": "tool_length",
+            "label": "Tool length below the flange (mm)",
+            "type": "number",
+            "default": 0,
+            "min": 0,
+            "max": 300,
+            "help": "The pen or gripper, if mounted: its tip is kept above the table too"
+        },
+        {
+            "key": "minutes",
+            "label": "Longest test (minutes)",
+            "type": "number",
+            "default": 30,
+            "min": 1,
+            "max": 240
+        },
+        {
+            "key": "channel",
+            "label": "Controls channel",
+            "type": "text",
+            "default": "control"
+        },
+        {
+            "key": "sim_start",
+            "label": "Start pose in simulation (degrees)",
+            "type": "text",
+            "default": "0,-20,-30,0,50,0"
+        }
+    ],
+    "hardware": [
+        "cpu"
+    ],
+    "packages": [
+        "numpy",
+        "xarm-python-sdk"
+    ],
+    "esasim": {
+        "version": 1
+    }
+}

@@ -1,4 +1,8 @@
 {
+    "esasim": {
+        "kind": "blueprint",
+        "flow_id": 4
+    },
     "name": "1 · Print the board",
     "description": "The A4 sheet with the four markers the camera finds the board by. Print it at 100%.",
     "published_version": 0,

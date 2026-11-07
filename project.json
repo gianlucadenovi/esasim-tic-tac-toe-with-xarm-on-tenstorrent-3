@@ -9,6 +9,12 @@
     "type": "robotics",
     "blueprints": [
         {
+            "name": "0 · Robot test (online, joint by joint)",
+            "file": "blueprints/0-robot-test-online-joint-by-joint.json",
+            "published_version": 0,
+            "nodes": 7
+        },
+        {
             "name": "1 · Print the board",
             "file": "blueprints/1-print-the-board.json",
             "published_version": 0,
@@ -41,14 +47,19 @@
     ],
     "blocks": [
         {
-            "id": "ws-board-sheet",
-            "version": 2,
-            "name": "Board sheet"
+            "id": "ws-xarm-joint-test",
+            "version": 1,
+            "name": "xArm joint test"
         },
         {
             "id": "ws-xarm-6-model",
             "version": 1,
             "name": "xArm 6 model"
+        },
+        {
+            "id": "ws-board-sheet",
+            "version": 2,
+            "name": "Board sheet"
         },
         {
             "id": "ws-simulate-games",

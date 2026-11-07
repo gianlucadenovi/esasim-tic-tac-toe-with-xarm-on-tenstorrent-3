@@ -1,4 +1,8 @@
 {
+    "esasim": {
+        "kind": "blueprint",
+        "flow_id": 5
+    },
     "name": "2 · Train the board reader (simulation + rendered cells)",
     "description": "Synthetic cells into the cells-synthetic dataset, then a CNN that reads empty, X or O, trained on the accelerator; the model goes to the models dataset.",
     "published_version": 1,

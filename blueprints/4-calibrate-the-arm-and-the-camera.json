@@ -1,4 +1,8 @@
 {
+    "esasim": {
+        "kind": "blueprint",
+        "flow_id": 7
+    },
     "name": "4 · Calibrate the arm and the camera",
     "description": "The pen touches the board's four corners (dry run first), and the camera checks it finds and straightens the board.",
     "published_version": 0,

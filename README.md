@@ -6,6 +6,7 @@ An [EsaSim](https://esacode.com/) project of the workspace Gianluca De Novi's wo
 
 ## Blueprints
 
+- [0 · Robot test (online, joint by joint)](blueprints/0-robot-test-online-joint-by-joint.json) · 7 blocks
 - [1 · Print the board](blueprints/1-print-the-board.json) · 2 blocks
 - [2 · Train the board reader (simulation + rendered cells)](blueprints/2-train-the-board-reader-simulation-rendered-cells.json) · 14 blocks · version 1
 - [3 · Train the player by self-play](blueprints/3-train-the-player-by-self-play.json) · 6 blocks · version 1
@@ -14,8 +15,9 @@ An [EsaSim](https://esacode.com/) project of the workspace Gianluca De Novi's wo
 
 ## Workspace blocks it uses
 
-- [Board sheet](blocks/ws-board-sheet) · version 2
+- [xArm joint test](blocks/ws-xarm-joint-test) · version 1
 - [xArm 6 model](blocks/ws-xarm-6-model) · version 1
+- [Board sheet](blocks/ws-board-sheet) · version 2
 - [Simulate games](blocks/ws-simulate-games) · version 1
 - [Render cells](blocks/ws-render-cells) · version 1
 - [Train cell reader](blocks/ws-train-cell-reader) · version 2

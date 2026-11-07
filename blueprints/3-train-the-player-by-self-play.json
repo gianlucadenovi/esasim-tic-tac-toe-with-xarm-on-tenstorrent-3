@@ -1,4 +1,8 @@
 {
+    "esasim": {
+        "kind": "blueprint",
+        "flow_id": 6
+    },
     "name": "3 · Train the player by self-play",
     "description": "Thousands of games against itself on the accelerator, tested against a random and a perfect player as it learns; the model goes to the models dataset.",
     "published_version": 1,
