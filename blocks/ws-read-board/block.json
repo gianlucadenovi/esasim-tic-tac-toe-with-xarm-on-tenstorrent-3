@@ -1,0 +1,129 @@
+{
+    "id": "ws-read-board",
+    "version": "1",
+    "name": "Read board",
+    "category": "Devices",
+    "icon": "camera",
+    "side": "backend",
+    "customizable": true,
+    "summary": "Finds the printed board in a camera picture by its markers, straightens it, cuts the 9 cells and reads them with the board reader.",
+    "help": "Without Pictures it takes them with a camera of the machine (Camera: 0, 1 … or a device path or stream address). Connect the models (reader.pt) to read the cells: the log and the live picture show X, O or empty in each, with how sure the reader is. Without models it only checks that the board is found and straight: use it to place the camera and the light. Real cells read with the reader are saved as cells/real_cells_*.npz (same format as Render cells): check them before training on them. Live: board (straightened picture with the reading), camera (when the board is not found), read (matrix of confidences).",
+    "inputs": [
+        {
+            "id": "pictures",
+            "label": "Pictures",
+            "type": "files",
+            "many": true,
+            "optional": true,
+            "formats": [
+                "jpg",
+                "png"
+            ],
+            "help": "Optional: pictures to read instead of the camera"
+        },
+        {
+            "id": "models",
+            "label": "Models",
+            "type": "files",
+            "many": true,
+            "optional": true,
+            "formats": [
+                "pt"
+            ],
+            "help": "Optional: reader.pt from Train cell reader (or the models dataset)"
+        }
+    ],
+    "outputs": [
+        {
+            "id": "board",
+            "label": "Straightened board",
+            "type": "files",
+            "formats": [
+                "png"
+            ]
+        },
+        {
+            "id": "frames",
+            "label": "Camera pictures",
+            "type": "files",
+            "formats": [
+                "jpg"
+            ]
+        },
+        {
+            "id": "cells",
+            "label": "Real cells",
+            "type": "files",
+            "formats": [
+                "npz"
+            ],
+            "help": "Cells with the reader's labels, for training"
+        },
+        {
+            "id": "readings",
+            "label": "Readings",
+            "type": "files",
+            "formats": [
+                "json"
+            ]
+        }
+    ],
+    "params": [
+        {
+            "key": "camera",
+            "label": "Camera",
+            "type": "text",
+            "default": "0",
+            "help": "0, 1 … a device path, or an rtsp:// or http:// address"
+        },
+        {
+            "key": "shots",
+            "label": "Pictures to take",
+            "type": "number",
+            "default": 1,
+            "min": 1,
+            "max": 500
+        },
+        {
+            "key": "every",
+            "label": "Every (seconds)",
+            "type": "number",
+            "default": 1,
+            "min": 0,
+            "max": 3600
+        },
+        {
+            "key": "width",
+            "label": "Camera width (pixels)",
+            "type": "number",
+            "default": 1280,
+            "min": 320,
+            "max": 4096
+        },
+        {
+            "key": "height",
+            "label": "Camera height (pixels)",
+            "type": "number",
+            "default": 720,
+            "min": 240,
+            "max": 3072
+        },
+        {
+            "key": "save_cells",
+            "label": "Save the cells read as training data",
+            "type": "bool",
+            "default": true
+        }
+    ],
+    "hardware": [
+        "cpu"
+    ],
+    "packages": [
+        "opencv-python-headless>=4.7",
+        "numpy",
+        "torch[cuda]"
+    ],
+    "esasim": {
+        "version": 2
+    }
+}

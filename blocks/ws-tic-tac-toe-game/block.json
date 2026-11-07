@@ -1,0 +1,420 @@
+{
+    "id": "ws-tic-tac-toe-game",
+    "version": "1",
+    "name": "Tic-tac-toe game",
+    "category": "Devices",
+    "icon": "robot-arm",
+    "side": "backend",
+    "customizable": true,
+    "summary": "The xArm plays tic-tac-toe on paper against a visitor, in simulation (the digital twin) or with the real arm and camera.",
+    "help": "Robot = simulation: the digital twin of the xArm 6 (UFACTORY's kinematics) draws with its pen on simulated paper, the simulated camera takes the pictures, and the visitor clicks a cell on the board in the Controls view (or a simulated visitor plays, Visitor = random or perfect): a simulated hand draws the mark and the game reads it with the camera and the board reader, so the whole chain runs and the reading is checked (live: reading). Robot = real xArm: the arm at Arm IP address (its Python SDK, straight over the network) and the camera of the machine; the visitor draws and presses Your move, or clicks the cell. Who starts: by default the robot and the visitor take turns, the robot starting the first game; each keeps its mark. Safety: every motion is planned whole and checked on the digital twin before anything moves (tool point inside the safe box and away from the base, pen not into the table, elbow and wrist above it, joints within their limits, no sudden swing of a joint), then runs smoothly with speed and acceleration capped (pen at most 150 mm/s, joints at most 60°/s, whatever the settings); with the real arm, its controller is told the limits too (reduced mode, the safe box as a fence). The arm starts at its rest position, goes back there after each move and when the session ends. The board lies with its top towards the arm (rotation 90°), as the visitor sitting opposite reads it. Controls (channel \"control\"): cell N, Your move, New game, Stop. Live: say, board, thinking, read, camera, paper, joints, pose, scene, limits, result.",
+    "inputs": [
+        {
+            "id": "models",
+            "label": "Models",
+            "type": "files",
+            "many": true,
+            "optional": true,
+            "formats": [
+                "pt"
+            ],
+            "help": "reader.pt and player.pt (the models dataset, or the training blocks)"
+        },
+        {
+            "id": "robot",
+            "label": "Robot model",
+            "type": "files",
+            "optional": true,
+            "formats": [
+                "gz",
+                "json"
+            ],
+            "help": "xarm6.robot.json.gz from xArm 6 model"
+        }
+    ],
+    "outputs": [
+        {
+            "id": "games",
+            "label": "Games",
+            "type": "files",
+            "formats": [
+                "json",
+                "png"
+            ],
+            "help": "game_001.json: who started, moves, times, result; the simulated paper"
+        },
+        {
+            "id": "cells",
+            "label": "Real cells",
+            "type": "files",
+            "formats": [
+                "npz"
+            ],
+            "help": "The cells seen in the games, labelled by the game"
+        },
+        {
+            "id": "log",
+            "label": "Poses",
+            "type": "table",
+            "formats": [
+                "csv"
+            ],
+            "help": "poses.csv: every pose (and, in simulation, the joints)"
+        }
+    ],
+    "params": [
+        {
+            "key": "robot",
+            "label": "Robot",
+            "type": "select",
+            "default": "simulation",
+            "options": [
+                "simulation",
+                "real xArm"
+            ]
+        },
+        {
+            "key": "camera",
+            "label": "Camera",
+            "type": "text",
+            "default": "simulated",
+            "help": "simulated (with Robot = simulation), or 0, 1 … a device path or stream address; none = moves from the controls"
+        },
+        {
+            "key": "visitor",
+            "label": "Visitor (simulation)",
+            "type": "select",
+            "default": "me (Controls)",
+            "options": [
+                "me (Controls)",
+                "random",
+                "perfect"
+            ]
+        },
+        {
+            "key": "auto_games",
+            "label": "Games with a simulated visitor",
+            "type": "number",
+            "default": 5,
+            "min": 1,
+            "max": 1000
+        },
+        {
+            "key": "sim_speed",
+            "label": "Simulation speed",
+            "type": "number",
+            "default": 1,
+            "min": 0.1,
+            "max": 100,
+            "help": "1 = the arm's real speed"
+        },
+        {
+            "key": "first",
+            "label": "Who starts",
+            "type": "select",
+            "default": "take turns",
+            "options": [
+                "take turns",
+                "the robot",
+                "the visitor"
+            ],
+            "help": "Taking turns, the robot starts the first game, the visitor the second, and so on"
+        },
+        {
+            "key": "robot_plays",
+            "label": "The robot plays",
+            "type": "select",
+            "default": "X",
+            "options": [
+                "X",
+                "O"
+            ],
+            "help": "The mark the robot draws; the visitor draws the other"
+        },
+        {
+            "key": "player",
+            "label": "Player",
+            "type": "select",
+            "default": "learned, checked",
+            "options": [
+                "learned, checked",
+                "learned",
+                "perfect"
+            ]
+        },
+        {
+            "key": "accelerator",
+            "label": "Accelerator for the models",
+            "type": "select",
+            "default": "CPU",
+            "options": [
+                "CPU",
+                "NVIDIA GPU",
+                "Tenstorrent"
+            ],
+            "help": "The models are tiny: the CPU answers at once"
+        },
+        {
+            "key": "camera_mount",
+            "label": "Camera mount",
+            "type": "select",
+            "default": "table",
+            "options": [
+                "table",
+                "wrist"
+            ],
+            "help": "On a stand above the table, or on the arm's wrist"
+        },
+        {
+            "key": "camera_pos",
+            "label": "Camera position (mm)",
+            "type": "text",
+            "default": "",
+            "help": "x, y, z in the arm's base frame; empty: 20 cm past the board's centre, 45 cm above the table (where the simulated camera is, and where the 3D view draws the real one)"
+        },
+        {
+            "key": "camera_look",
+            "label": "Camera looks at (mm)",
+            "type": "text",
+            "default": "",
+            "help": "Empty: the board's centre"
+        },
+        {
+            "key": "camera_hfov",
+            "label": "Camera field of view (degrees)",
+            "type": "number",
+            "default": 70,
+            "min": 30,
+            "max": 120
+        },
+        {
+            "key": "wrist_camera",
+            "label": "Wrist camera offset (mm)",
+            "type": "text",
+            "default": "70, 0, -40",
+            "help": "x, y, z in the flange frame"
+        },
+        {
+            "key": "wrist_height",
+            "label": "Flange height to read (wrist camera, mm)",
+            "type": "number",
+            "default": 330
+        },
+        {
+            "key": "park",
+            "label": "Rest position of the pen (mm)",
+            "type": "text",
+            "default": "150, -250, 250",
+            "help": "x, y, z where the arm waits: pen up, out of a stand camera's view. It starts there, goes back after each move and at the end."
+        },
+        {
+            "key": "draw_grid",
+            "label": "Draw the grid at the start of each game",
+            "type": "bool",
+            "default": true
+        },
+        {
+            "key": "keep_playing",
+            "label": "Offer a new game after each one",
+            "type": "bool",
+            "default": true
+        },
+        {
+            "key": "watch",
+            "label": "See the visitor's move without the button (real camera)",
+            "type": "bool",
+            "default": false
+        },
+        {
+            "key": "sure",
+            "label": "Least confidence to accept a mark",
+            "type": "number",
+            "default": 0.7,
+            "min": 0.34,
+            "max": 0.999
+        },
+        {
+            "key": "minutes",
+            "label": "Longest session (minutes)",
+            "type": "number",
+            "default": 30,
+            "min": 1,
+            "max": 600
+        },
+        {
+            "key": "channel",
+            "label": "Controls channel",
+            "type": "text",
+            "default": "control"
+        },
+        {
+            "key": "ip",
+            "label": "Arm IP address (real xArm)",
+            "type": "text",
+            "default": "192.168.1.200"
+        },
+        {
+            "key": "board_x",
+            "label": "Board X (mm)",
+            "type": "number",
+            "default": 390,
+            "help": "Lower-left corner of the board (marker 3) in the arm's base frame"
+        },
+        {
+            "key": "board_y",
+            "label": "Board Y (mm)",
+            "type": "number",
+            "default": -70
+        },
+        {
+            "key": "board_rotation",
+            "label": "Board rotation (degrees)",
+            "type": "number",
+            "default": 90,
+            "help": "90: the top of the sheet towards the arm, the way the visitor sitting opposite reads it"
+        },
+        {
+            "key": "board_size",
+            "label": "Board size (mm)",
+            "type": "number",
+            "default": 140,
+            "min": 30,
+            "max": 600
+        },
+        {
+            "key": "table_z",
+            "label": "Table height (mm)",
+            "type": "number",
+            "default": 0,
+            "help": "The paper's height in the arm's base frame"
+        },
+        {
+            "key": "pen_length",
+            "label": "Pen length below the flange (mm)",
+            "type": "number",
+            "default": 100,
+            "min": 0,
+            "max": 300
+        },
+        {
+            "key": "tcp",
+            "label": "The arm's TCP is",
+            "type": "select",
+            "default": "flange",
+            "options": [
+                "flange",
+                "pen tip"
+            ],
+            "help": "What the controller's tool point is: the draw and travel heights are of that point"
+        },
+        {
+            "key": "z_draw",
+            "label": "Draw height (mm)",
+            "type": "number",
+            "default": 100
+        },
+        {
+            "key": "z_up",
+            "label": "Travel height (mm)",
+            "type": "number",
+            "default": 130
+        },
+        {
+            "key": "roll",
+            "label": "Tool roll (degrees)",
+            "type": "number",
+            "default": 180
+        },
+        {
+            "key": "pitch",
+            "label": "Tool pitch (degrees)",
+            "type": "number",
+            "default": 0
+        },
+        {
+            "key": "yaw",
+            "label": "Tool yaw (degrees)",
+            "type": "number",
+            "default": 0
+        },
+        {
+            "key": "speed",
+            "label": "Pen speed (mm/s)",
+            "type": "number",
+            "default": 80,
+            "min": 1,
+            "max": 150,
+            "help": "The tool point's top speed, in strokes and joint moves alike; never more than 150"
+        },
+        {
+            "key": "accel",
+            "label": "Pen acceleration (mm/s²)",
+            "type": "number",
+            "default": 400,
+            "min": 10,
+            "max": 800,
+            "help": "Never more than 800"
+        },
+        {
+            "key": "joint_speed",
+            "label": "Joint speed (degrees/s)",
+            "type": "number",
+            "default": 30,
+            "min": 5,
+            "max": 60,
+            "help": "Joint moves (to and from the rest position); never more than 60"
+        },
+        {
+            "key": "joint_accel",
+            "label": "Joint acceleration (degrees/s²)",
+            "type": "number",
+            "default": 80,
+            "min": 10,
+            "max": 120,
+            "help": "Never more than 120"
+        },
+        {
+            "key": "safe_box",
+            "label": "Safe box (mm)",
+            "type": "text",
+            "default": "100,600, -350,350, 20,450",
+            "help": "x min, x max, y min, y max, z min, z max of the tool point: no motion that leaves it is sent, and the real arm's controller gets it as a fence"
+        },
+        {
+            "key": "pen_width",
+            "label": "Pen width (mm, simulation)",
+            "type": "number",
+            "default": 1.2,
+            "min": 0.3,
+            "max": 5
+        },
+        {
+            "key": "width",
+            "label": "Camera width (pixels)",
+            "type": "number",
+            "default": 1280,
+            "min": 320,
+            "max": 4096
+        },
+        {
+            "key": "height",
+            "label": "Camera height (pixels)",
+            "type": "number",
+            "default": 720,
+            "min": 240,
+            "max": 3072
+        }
+    ],
+    "hardware": [
+        "cpu"
+    ],
+    "packages": [
+        "opencv-python-headless>=4.7",
+        "numpy",
+        "torch[cuda]",
+        "xarm-python-sdk"
+    ],
+    "esasim": {
+        "version": 6
+    }
+}

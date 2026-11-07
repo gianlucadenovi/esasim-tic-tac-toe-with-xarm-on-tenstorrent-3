@@ -1,0 +1,119 @@
+{
+    "id": "ws-train-cell-reader",
+    "version": "1",
+    "name": "Train cell reader",
+    "category": "AI",
+    "icon": "brain",
+    "side": "backend",
+    "customizable": true,
+    "summary": "Trains the board reader (PyTorch CNN: empty, X or O in a 32x32 cell) on the accelerator you choose: NVIDIA GPU, Tenstorrent or CPU.",
+    "help": "Connect the cells of Simulate games (pictures of the digital twin) and/or Render cells, and optionally real cells (Read board, games). Accelerator: NVIDIA GPU (CUDA; on Windows the worker installs PyTorch with CUDA, EsaSim 0.12.13+), Tenstorrent (PyTorch/XLA from TT-Forge's tt-xla, installed on the Linux machine with the cards) or CPU. The one chosen is used or the block stops and says why: it never moves to another accelerator by itself. Flips and quarter turns augment the cells. Live: train (loss, acc, img_s), val (val_acc after each epoch), confusion (matrix: rows true, columns read), device. Writes model/reader.pt (+ reader.json) for Read board and the game.",
+    "inputs": [
+        {
+            "id": "cells",
+            "label": "Cells",
+            "type": "files",
+            "many": true,
+            "formats": [
+                "npz"
+            ],
+            "help": "*.npz from Simulate games or Render cells"
+        },
+        {
+            "id": "real",
+            "label": "Real cells",
+            "type": "files",
+            "many": true,
+            "optional": true,
+            "formats": [
+                "npz"
+            ],
+            "help": "Optional: cells from real pictures (Read board, games), same format; they count more"
+        }
+    ],
+    "outputs": [
+        {
+            "id": "model",
+            "label": "Board reader",
+            "type": "files",
+            "formats": [
+                "pt",
+                "json"
+            ],
+            "help": "reader.pt (weights and facts) and reader.json"
+        },
+        {
+            "id": "metrics",
+            "label": "Metrics",
+            "type": "metrics",
+            "formats": [
+                "json"
+            ]
+        }
+    ],
+    "params": [
+        {
+            "key": "accelerator",
+            "label": "Accelerator",
+            "type": "select",
+            "default": "NVIDIA GPU",
+            "options": [
+                "NVIDIA GPU",
+                "Tenstorrent",
+                "CPU"
+            ]
+        },
+        {
+            "key": "epochs",
+            "label": "Epochs",
+            "type": "number",
+            "default": 6,
+            "min": 1,
+            "max": 200
+        },
+        {
+            "key": "batch",
+            "label": "Batch",
+            "type": "number",
+            "default": 256,
+            "min": 16,
+            "max": 8192
+        },
+        {
+            "key": "lr",
+            "label": "Learning rate",
+            "type": "number",
+            "default": 0.002,
+            "min": 1.0e-5,
+            "max": 1
+        },
+        {
+            "key": "validation",
+            "label": "Share for validation",
+            "type": "number",
+            "default": 0.1,
+            "min": 0.02,
+            "max": 0.5
+        },
+        {
+            "key": "seed",
+            "label": "Seed",
+            "type": "number",
+            "default": 1,
+            "min": 0,
+            "max": 1000000
+        }
+    ],
+    "hardware": [
+        "cpu",
+        "nvidia",
+        "tenstorrent"
+    ],
+    "packages": [
+        "torch[cuda]",
+        "numpy"
+    ],
+    "esasim": {
+        "version": 2
+    }
+}

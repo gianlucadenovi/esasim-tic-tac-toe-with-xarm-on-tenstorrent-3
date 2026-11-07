@@ -1,0 +1,423 @@
+{
+    "name": "2 · Train the board reader (simulation + rendered cells)",
+    "description": "Synthetic cells into the cells-synthetic dataset, then a CNN that reads empty, X or O, trained on the accelerator; the model goes to the models dataset.",
+    "published_version": 1,
+    "updated": "2026-11-07 17:00:20",
+    "graph": {
+        "nodes": [
+            {
+                "id": "arm_model",
+                "type": "ws-xarm-6-model",
+                "x": -320,
+                "y": -160,
+                "params": {
+                    "detail": 3
+                },
+                "title": "xArm 6 model"
+            },
+            {
+                "id": "simulate",
+                "type": "ws-simulate-games",
+                "x": 60,
+                "y": -160,
+                "params": {
+                    "games": 300,
+                    "variety": "some",
+                    "camera_mount": "table",
+                    "camera_pos": "",
+                    "camera_look": "",
+                    "camera_hfov": 70,
+                    "board_x": 390,
+                    "board_y": -70,
+                    "board_rotation": 90,
+                    "board_size": 140,
+                    "table_z": 0,
+                    "pen_length": 100,
+                    "save_frames": 24,
+                    "seed": 1
+                },
+                "title": "Simulate games (digital twin)",
+                "dest": {
+                    "location": 3,
+                    "name": "cells-sim",
+                    "folder": "cells-sim",
+                    "live": true,
+                    "move": false,
+                    "ports": [
+                        "cells",
+                        "frames"
+                    ]
+                }
+            },
+            {
+                "id": "render",
+                "type": "ws-render-cells",
+                "x": 60,
+                "y": 210,
+                "params": {
+                    "count": 30000,
+                    "size": 32,
+                    "seed": 1
+                },
+                "title": "Render cells",
+                "dest": {
+                    "location": 3,
+                    "name": "cells-synthetic",
+                    "folder": "cells-synthetic",
+                    "live": true,
+                    "move": false,
+                    "ports": [
+                        "cells"
+                    ]
+                }
+            },
+            {
+                "id": "train",
+                "type": "ws-train-cell-reader",
+                "x": 420,
+                "y": 80,
+                "params": {
+                    "accelerator": "NVIDIA GPU",
+                    "epochs": 6,
+                    "batch": 256
+                },
+                "title": "Train cell reader",
+                "dest": {
+                    "location": 3,
+                    "name": "models",
+                    "folder": "models",
+                    "live": true,
+                    "move": false,
+                    "ports": [
+                        "model"
+                    ]
+                }
+            },
+            {
+                "id": "sim_camera",
+                "type": "image-view",
+                "x": 440,
+                "y": -97,
+                "params": {
+                    "size": "large"
+                },
+                "title": "The simulated camera"
+            },
+            {
+                "id": "sim_samples",
+                "type": "image-view",
+                "x": 580,
+                "y": -460,
+                "params": {
+                    "size": "large"
+                },
+                "title": "Cells cut from the simulated pictures"
+            },
+            {
+                "id": "sim_metrics",
+                "type": "metrics-view",
+                "x": 532,
+                "y": -280,
+                "params": {
+                    "fields": "games,pictures,found_rate,cells,seconds"
+                },
+                "title": "Simulation"
+            },
+            {
+                "id": "cells_live",
+                "type": "image-view",
+                "x": 440,
+                "y": 520,
+                "params": {
+                    "size": "large"
+                },
+                "title": "Rendered cells as they are made"
+            },
+            {
+                "id": "samples",
+                "type": "image-view",
+                "x": 440,
+                "y": 360,
+                "params": {
+                    "size": "large"
+                },
+                "title": "Rendered examples"
+            },
+            {
+                "id": "loss",
+                "type": "chart",
+                "x": 800,
+                "y": 40,
+                "params": {
+                    "kind": "line",
+                    "x": "step",
+                    "y": "loss,acc",
+                    "channel": "train",
+                    "title": "Loss and accuracy per step"
+                },
+                "title": "Training: loss and accuracy"
+            },
+            {
+                "id": "val",
+                "type": "chart",
+                "x": 800,
+                "y": 246,
+                "params": {
+                    "kind": "line",
+                    "x": "epoch",
+                    "y": "val_acc",
+                    "channel": "val",
+                    "ymin": "0.9",
+                    "ymax": "1",
+                    "title": "Validation accuracy per epoch"
+                },
+                "title": "Validation accuracy"
+            },
+            {
+                "id": "speed",
+                "type": "gauge-view",
+                "x": 800,
+                "y": 440,
+                "params": {
+                    "fields": "train.img_s",
+                    "style": "number",
+                    "unit": "cells/s",
+                    "decimals": 0
+                },
+                "title": "Speed"
+            },
+            {
+                "id": "confusion",
+                "type": "heatmap-view",
+                "x": 800,
+                "y": 640,
+                "params": {
+                    "field": "matrix",
+                    "colormap": "magma",
+                    "values": true
+                },
+                "title": "Confusion (rows: true empty, X, O; columns: read)"
+            },
+            {
+                "id": "metrics",
+                "type": "metrics-view",
+                "x": 800,
+                "y": -120,
+                "params": {
+                    "fields": "val_acc,device,seconds,img_s,cells"
+                },
+                "title": "Board reader"
+            }
+        ],
+        "edges": [
+            {
+                "id": "arm_model.model>simulate.robot",
+                "from": {
+                    "node": "arm_model",
+                    "port": "model"
+                },
+                "to": {
+                    "node": "simulate",
+                    "port": "robot"
+                }
+            },
+            {
+                "id": "simulate.cells>train.cells",
+                "from": {
+                    "node": "simulate",
+                    "port": "cells"
+                },
+                "to": {
+                    "node": "train",
+                    "port": "cells"
+                }
+            },
+            {
+                "id": "render.cells>train.cells",
+                "from": {
+                    "node": "render",
+                    "port": "cells"
+                },
+                "to": {
+                    "node": "train",
+                    "port": "cells"
+                }
+            },
+            {
+                "id": "simulate.telemetry>sim_camera.images",
+                "from": {
+                    "node": "simulate",
+                    "port": "telemetry"
+                },
+                "to": {
+                    "node": "sim_camera",
+                    "port": "images"
+                }
+            },
+            {
+                "id": "simulate.samples>sim_samples.images",
+                "from": {
+                    "node": "simulate",
+                    "port": "samples"
+                },
+                "to": {
+                    "node": "sim_samples",
+                    "port": "images"
+                }
+            },
+            {
+                "id": "simulate.metrics>sim_metrics.data",
+                "from": {
+                    "node": "simulate",
+                    "port": "metrics"
+                },
+                "to": {
+                    "node": "sim_metrics",
+                    "port": "data"
+                }
+            },
+            {
+                "id": "render.telemetry>cells_live.images",
+                "from": {
+                    "node": "render",
+                    "port": "telemetry"
+                },
+                "to": {
+                    "node": "cells_live",
+                    "port": "images"
+                }
+            },
+            {
+                "id": "render.samples>samples.images",
+                "from": {
+                    "node": "render",
+                    "port": "samples"
+                },
+                "to": {
+                    "node": "samples",
+                    "port": "images"
+                }
+            },
+            {
+                "id": "train.telemetry>loss.data",
+                "from": {
+                    "node": "train",
+                    "port": "telemetry"
+                },
+                "to": {
+                    "node": "loss",
+                    "port": "data"
+                }
+            },
+            {
+                "id": "train.telemetry>val.data",
+                "from": {
+                    "node": "train",
+                    "port": "telemetry"
+                },
+                "to": {
+                    "node": "val",
+                    "port": "data"
+                }
+            },
+            {
+                "id": "train.telemetry>speed.data",
+                "from": {
+                    "node": "train",
+                    "port": "telemetry"
+                },
+                "to": {
+                    "node": "speed",
+                    "port": "data"
+                }
+            },
+            {
+                "id": "train.telemetry>confusion.data",
+                "from": {
+                    "node": "train",
+                    "port": "telemetry"
+                },
+                "to": {
+                    "node": "confusion",
+                    "port": "data"
+                }
+            },
+            {
+                "id": "train.metrics>metrics.data",
+                "from": {
+                    "node": "train",
+                    "port": "metrics"
+                },
+                "to": {
+                    "node": "metrics",
+                    "port": "data"
+                }
+            }
+        ],
+        "notes": [],
+        "dash": {
+            "items": {
+                "cells_live": {
+                    "x": 0,
+                    "y": 0,
+                    "w": 3,
+                    "h": 8
+                },
+                "samples": {
+                    "x": 3,
+                    "y": 0,
+                    "w": 3,
+                    "h": 8
+                },
+                "loss": {
+                    "x": 0,
+                    "y": 8,
+                    "w": 6,
+                    "h": 7
+                },
+                "val": {
+                    "x": 6,
+                    "y": 8,
+                    "w": 6,
+                    "h": 7
+                },
+                "speed": {
+                    "x": 9,
+                    "y": 0,
+                    "w": 3,
+                    "h": 8
+                },
+                "confusion": {
+                    "x": 0,
+                    "y": 15,
+                    "w": 3,
+                    "h": 8
+                },
+                "metrics": {
+                    "x": 0,
+                    "y": 23,
+                    "w": 12,
+                    "h": 3
+                },
+                "sim_camera": {
+                    "x": 3,
+                    "y": 15,
+                    "w": 6,
+                    "h": 8
+                },
+                "sim_samples": {
+                    "x": 6,
+                    "y": 0,
+                    "w": 3,
+                    "h": 8
+                },
+                "sim_metrics": {
+                    "x": 0,
+                    "y": 26,
+                    "w": 12,
+                    "h": 3
+                }
+            }
+        }
+    }
+}

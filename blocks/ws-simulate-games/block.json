@@ -1,0 +1,218 @@
+{
+    "id": "ws-simulate-games",
+    "version": "1",
+    "name": "Simulate games",
+    "category": "Simulation",
+    "icon": "sparkles",
+    "side": "backend",
+    "customizable": true,
+    "summary": "Training data from the digital twin: simulated games on paper, seen by the simulated camera, cut into labelled cells.",
+    "help": "In each simulated game the arm draws the grid and its marks (the strokes the real arm draws), a simulated visitor draws theirs by hand, and the simulated camera (on a stand above the table, or on the wrist) takes a picture after every move. Every picture goes through the same steps as a real game (markers found, board straightened, nine cells cut) and the game knows what is in each cell: labelled cells (sim_cells_01.npz, the format of Render cells) for Train cell reader. Paper, ink, pens, light, board position and camera position and lens change from game to game (Variety). Connect xArm 6 model so the arm appears in the pictures with its real shape. About 8 pictures per second on one CPU core; 200 games give about 15,000 cells. Use the same board, camera and pen settings as the game.",
+    "inputs": [
+        {
+            "id": "robot",
+            "label": "Robot model",
+            "type": "files",
+            "optional": true,
+            "formats": [
+                "gz",
+                "json"
+            ],
+            "help": "xarm6.robot.json.gz from xArm 6 model"
+        }
+    ],
+    "outputs": [
+        {
+            "id": "cells",
+            "label": "Cells",
+            "type": "files",
+            "formats": [
+                "npz"
+            ],
+            "help": "sim_cells_01.npz: x (N x 32 x 32), y (0 empty, 1 X, 2 O)"
+        },
+        {
+            "id": "samples",
+            "label": "Examples",
+            "type": "files",
+            "formats": [
+                "png"
+            ]
+        },
+        {
+            "id": "frames",
+            "label": "Simulated pictures",
+            "type": "files",
+            "formats": [
+                "jpg"
+            ],
+            "help": "A few of the camera's pictures"
+        },
+        {
+            "id": "metrics",
+            "label": "Metrics",
+            "type": "metrics",
+            "formats": [
+                "json"
+            ]
+        }
+    ],
+    "params": [
+        {
+            "key": "games",
+            "label": "Games",
+            "type": "number",
+            "default": 200,
+            "min": 1,
+            "max": 20000
+        },
+        {
+            "key": "variety",
+            "label": "Variety",
+            "type": "select",
+            "default": "some",
+            "options": [
+                "none",
+                "some",
+                "a lot"
+            ],
+            "help": "How much paper, light, board and camera change from game to game"
+        },
+        {
+            "key": "camera_mount",
+            "label": "Camera",
+            "type": "select",
+            "default": "table",
+            "options": [
+                "table",
+                "wrist"
+            ],
+            "help": "On a stand above the table, or on the arm's wrist"
+        },
+        {
+            "key": "camera_pos",
+            "label": "Camera position (mm)",
+            "type": "text",
+            "default": "",
+            "help": "x, y, z in the arm's base frame; empty: 20 cm past the board's centre, 45 cm above the table"
+        },
+        {
+            "key": "camera_look",
+            "label": "Camera looks at (mm)",
+            "type": "text",
+            "default": "",
+            "help": "x, y, z; empty: the board's centre"
+        },
+        {
+            "key": "camera_hfov",
+            "label": "Camera field of view (degrees)",
+            "type": "number",
+            "default": 70,
+            "min": 30,
+            "max": 120
+        },
+        {
+            "key": "wrist_camera",
+            "label": "Wrist camera offset (mm)",
+            "type": "text",
+            "default": "70, 0, -40",
+            "help": "x, y, z in the flange frame"
+        },
+        {
+            "key": "wrist_height",
+            "label": "Flange height to read (wrist camera, mm)",
+            "type": "number",
+            "default": 330
+        },
+        {
+            "key": "park",
+            "label": "Parked pen (mm)",
+            "type": "text",
+            "default": "150, -250, 250",
+            "help": "Where the arm waits while a camera on a stand looks"
+        },
+        {
+            "key": "board_x",
+            "label": "Board X (mm)",
+            "type": "number",
+            "default": 250
+        },
+        {
+            "key": "board_y",
+            "label": "Board Y (mm)",
+            "type": "number",
+            "default": -90
+        },
+        {
+            "key": "board_rotation",
+            "label": "Board rotation (degrees)",
+            "type": "number",
+            "default": 0
+        },
+        {
+            "key": "board_size",
+            "label": "Board size (mm)",
+            "type": "number",
+            "default": 140,
+            "min": 60,
+            "max": 160
+        },
+        {
+            "key": "table_z",
+            "label": "Table height (mm)",
+            "type": "number",
+            "default": 0,
+            "help": "The paper's height in the arm's base frame"
+        },
+        {
+            "key": "pen_length",
+            "label": "Pen length below the flange (mm)",
+            "type": "number",
+            "default": 100,
+            "min": 0,
+            "max": 300
+        },
+        {
+            "key": "sim_width",
+            "label": "Picture width (pixels)",
+            "type": "number",
+            "default": 1280,
+            "min": 320,
+            "max": 3840
+        },
+        {
+            "key": "sim_height",
+            "label": "Picture height (pixels)",
+            "type": "number",
+            "default": 720,
+            "min": 240,
+            "max": 2160
+        },
+        {
+            "key": "save_frames",
+            "label": "Pictures to keep",
+            "type": "number",
+            "default": 24,
+            "min": 0,
+            "max": 1000
+        },
+        {
+            "key": "seed",
+            "label": "Seed",
+            "type": "number",
+            "default": 1,
+            "min": 0,
+            "max": 1000000
+        }
+    ],
+    "hardware": [
+        "cpu"
+    ],
+    "packages": [
+        "opencv-python-headless>=4.7",
+        "numpy"
+    ],
+    "esasim": {
+        "version": 1
+    }
+}

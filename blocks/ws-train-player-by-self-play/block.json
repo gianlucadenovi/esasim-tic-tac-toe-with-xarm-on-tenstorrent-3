@@ -1,0 +1,130 @@
+{
+    "id": "ws-train-player-by-self-play",
+    "version": "1",
+    "name": "Train player by self-play",
+    "category": "AI",
+    "icon": "dice",
+    "side": "backend",
+    "customizable": true,
+    "summary": "A small value network (PyTorch) learns tic-tac-toe by playing thousands of games against itself, on the accelerator you choose.",
+    "help": "Games are played in batches side by side; after each move the network scores the position for the player who just moved, plays its best move (sometimes a random one, to explore) and learns from how games end and from its own look one move ahead. Tested as it learns against a random player, against the perfect player, and on every position of the game. Accelerator: NVIDIA GPU, Tenstorrent or CPU, as in Train cell reader (the one chosen is used, or the block stops and says why). Live: train (games, loss, explore, games_s, x_wins, o_wins, draws), eval (vs_random_win, vs_perfect_draw, vs_perfect_loss, optimal_moves), first_move (matrix: X's score for each first move). Writes model/player.pt for the game.",
+    "inputs": [],
+    "outputs": [
+        {
+            "id": "model",
+            "label": "Player",
+            "type": "files",
+            "formats": [
+                "pt",
+                "json"
+            ],
+            "help": "player.pt (weights and facts) and player.json"
+        },
+        {
+            "id": "metrics",
+            "label": "Metrics",
+            "type": "metrics",
+            "formats": [
+                "json"
+            ]
+        }
+    ],
+    "params": [
+        {
+            "key": "accelerator",
+            "label": "Accelerator",
+            "type": "select",
+            "default": "NVIDIA GPU",
+            "options": [
+                "NVIDIA GPU",
+                "Tenstorrent",
+                "CPU"
+            ]
+        },
+        {
+            "key": "games",
+            "label": "Games",
+            "type": "number",
+            "default": 60000,
+            "min": 1000,
+            "max": 5000000
+        },
+        {
+            "key": "parallel",
+            "label": "Games played side by side",
+            "type": "number",
+            "default": 256,
+            "min": 1,
+            "max": 8192
+        },
+        {
+            "key": "eval_every",
+            "label": "Test every (games)",
+            "type": "number",
+            "default": 4000,
+            "min": 256,
+            "max": 1000000
+        },
+        {
+            "key": "explore_start",
+            "label": "Random moves at the start",
+            "type": "number",
+            "default": 0.5,
+            "min": 0,
+            "max": 1
+        },
+        {
+            "key": "explore_end",
+            "label": "Random moves at the end",
+            "type": "number",
+            "default": 0.05,
+            "min": 0,
+            "max": 1
+        },
+        {
+            "key": "lookahead",
+            "label": "Weight of the look ahead",
+            "type": "number",
+            "default": 0.8,
+            "min": 0,
+            "max": 1,
+            "help": "0: learn only from how games ended; 1: only from the network's look one move ahead"
+        },
+        {
+            "key": "updates",
+            "label": "Training steps per batch of games",
+            "type": "number",
+            "default": 8,
+            "min": 1,
+            "max": 256
+        },
+        {
+            "key": "lr",
+            "label": "Learning rate",
+            "type": "number",
+            "default": 0.002,
+            "min": 1.0e-5,
+            "max": 1
+        },
+        {
+            "key": "seed",
+            "label": "Seed",
+            "type": "number",
+            "default": 1,
+            "min": 0,
+            "max": 1000000
+        }
+    ],
+    "hardware": [
+        "cpu",
+        "nvidia",
+        "tenstorrent"
+    ],
+    "packages": [
+        "torch[cuda]",
+        "numpy"
+    ],
+    "esasim": {
+        "version": 2
+    }
+}

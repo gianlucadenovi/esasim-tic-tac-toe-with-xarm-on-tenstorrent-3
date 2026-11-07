@@ -1,0 +1,44 @@
+{
+    "id": "ws-xarm-6-model",
+    "version": "1",
+    "name": "xArm 6 model",
+    "category": "Simulation",
+    "icon": "robot-arm",
+    "side": "backend",
+    "customizable": true,
+    "summary": "The UFACTORY xArm 6 for the digital twin: kinematics and 3D meshes (UFACTORY's own, BSD-3), for the twin view and the simulated camera.",
+    "help": "Downloads UFACTORY's meshes of the xArm 6 (github.com/xArm-Developer/xarm_ros, BSD-3-Clause, Copyright UFACTORY Inc.) once into the worker's data folder (cache/xarm6), merges details smaller than Detail, and writes xarm6.robot.json.gz (about 220 KB: joints, limits, meshes in mm) with the license. Connect it to the xArm twin view and to Simulate games / Tic-tac-toe game (Robot model input), which draw the arm in the simulated camera. The machine needs to reach raw.githubusercontent.com the first time.",
+    "inputs": [],
+    "outputs": [
+        {
+            "id": "model",
+            "label": "Robot model",
+            "type": "files",
+            "formats": [
+                "gz",
+                "txt"
+            ],
+            "help": "xarm6.robot.json.gz (esasim.robot/1) and LICENSE-xarm_ros.txt"
+        }
+    ],
+    "params": [
+        {
+            "key": "detail",
+            "label": "Detail (mm)",
+            "type": "number",
+            "default": 3,
+            "min": 1,
+            "max": 20,
+            "help": "Details smaller than this merge: 3 mm looks like the arm and stays small"
+        }
+    ],
+    "hardware": [
+        "cpu"
+    ],
+    "packages": [
+        "numpy"
+    ],
+    "esasim": {
+        "version": 1
+    }
+}

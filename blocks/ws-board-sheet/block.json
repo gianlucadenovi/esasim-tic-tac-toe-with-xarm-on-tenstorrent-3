@@ -1,0 +1,68 @@
+{
+    "id": "ws-board-sheet",
+    "version": "1",
+    "name": "Board sheet",
+    "category": "Data",
+    "icon": "grid",
+    "side": "backend",
+    "customizable": true,
+    "summary": "The printable tic-tac-toe board: four ArUco markers around a square, so a camera finds and straightens it by itself.",
+    "help": "Print board-sheet.pdf on A4 at 100% (no scaling) and check the square with a ruler. The markers are ArUco 4x4 ids 0 (top left), 1 (top right), 2 (bottom right), 3 (bottom left); each touches the board with its inner corner. Use the same board size in the xArm and Tic-tac-toe game blocks. Board + 2 x marker must stay under 202 mm.",
+    "inputs": [],
+    "outputs": [
+        {
+            "id": "sheet",
+            "label": "Sheet",
+            "type": "files",
+            "formats": [
+                "pdf",
+                "png",
+                "json"
+            ],
+            "help": "board-sheet.pdf to print, the same as PNG, and its measures"
+        }
+    ],
+    "params": [
+        {
+            "key": "board_mm",
+            "label": "Board size (mm)",
+            "type": "number",
+            "default": 140,
+            "min": 60,
+            "max": 160
+        },
+        {
+            "key": "marker_mm",
+            "label": "Marker size (mm)",
+            "type": "number",
+            "default": 25,
+            "min": 10,
+            "max": 50
+        },
+        {
+            "key": "dpi",
+            "label": "Resolution (dpi)",
+            "type": "number",
+            "default": 300,
+            "min": 150,
+            "max": 600
+        },
+        {
+            "key": "title",
+            "label": "Title on the sheet",
+            "type": "text",
+            "default": "EsaSim · tic-tac-toe with the xArm"
+        }
+    ],
+    "hardware": [
+        "cpu"
+    ],
+    "packages": [
+        "opencv-python-headless>=4.7",
+        "pillow",
+        "numpy"
+    ],
+    "esasim": {
+        "version": 2
+    }
+}

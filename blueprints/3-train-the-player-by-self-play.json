@@ -1,0 +1,189 @@
+{
+    "name": "3 · Train the player by self-play",
+    "description": "Thousands of games against itself on the accelerator, tested against a random and a perfect player as it learns; the model goes to the models dataset.",
+    "published_version": 1,
+    "updated": "2026-11-07 15:32:40",
+    "graph": {
+        "nodes": [
+            {
+                "id": "selfplay",
+                "type": "ws-train-player-by-self-play",
+                "x": 60,
+                "y": 120,
+                "params": {
+                    "accelerator": "NVIDIA GPU",
+                    "games": 60000,
+                    "parallel": 256,
+                    "eval_every": 4000
+                },
+                "title": "Train player by self-play",
+                "dest": {
+                    "location": 3,
+                    "name": "models",
+                    "folder": "models",
+                    "live": true,
+                    "move": false,
+                    "ports": [
+                        "model"
+                    ]
+                }
+            },
+            {
+                "id": "skill",
+                "type": "chart",
+                "x": 440,
+                "y": 20,
+                "params": {
+                    "kind": "line",
+                    "x": "games",
+                    "y": "optimal_moves,vs_perfect_draw,vs_random_win",
+                    "channel": "eval",
+                    "ymin": "0",
+                    "ymax": "1",
+                    "title": "Optimal moves, draws against perfect play, wins against random play"
+                },
+                "title": "How well it plays"
+            },
+            {
+                "id": "games",
+                "type": "chart",
+                "x": 440,
+                "y": 420,
+                "params": {
+                    "kind": "area",
+                    "x": "games",
+                    "y": "x_wins,o_wins,draws",
+                    "channel": "train",
+                    "title": "Results of the self-play games"
+                },
+                "title": "Self-play"
+            },
+            {
+                "id": "speed",
+                "type": "gauge-view",
+                "x": 440,
+                "y": 620,
+                "params": {
+                    "fields": "train.games_s,eval.optimal_moves",
+                    "style": "number",
+                    "decimals": 2
+                },
+                "title": "Games per second"
+            },
+            {
+                "id": "first",
+                "type": "heatmap-view",
+                "x": 440,
+                "y": 220,
+                "params": {
+                    "field": "matrix",
+                    "colormap": "viridis",
+                    "values": true
+                },
+                "title": "X's first move: what the network thinks of each cell"
+            },
+            {
+                "id": "metrics",
+                "type": "metrics-view",
+                "x": 440,
+                "y": -140,
+                "params": {
+                    "fields": "optimal_moves,vs_perfect_draw,vs_perfect_loss,vs_random_win,games,games_s,device,seconds"
+                },
+                "title": "Player"
+            }
+        ],
+        "edges": [
+            {
+                "id": "selfplay.telemetry>skill.data",
+                "from": {
+                    "node": "selfplay",
+                    "port": "telemetry"
+                },
+                "to": {
+                    "node": "skill",
+                    "port": "data"
+                }
+            },
+            {
+                "id": "selfplay.telemetry>games.data",
+                "from": {
+                    "node": "selfplay",
+                    "port": "telemetry"
+                },
+                "to": {
+                    "node": "games",
+                    "port": "data"
+                }
+            },
+            {
+                "id": "selfplay.telemetry>speed.data",
+                "from": {
+                    "node": "selfplay",
+                    "port": "telemetry"
+                },
+                "to": {
+                    "node": "speed",
+                    "port": "data"
+                }
+            },
+            {
+                "id": "selfplay.telemetry>first.data",
+                "from": {
+                    "node": "selfplay",
+                    "port": "telemetry"
+                },
+                "to": {
+                    "node": "first",
+                    "port": "data"
+                }
+            },
+            {
+                "id": "selfplay.metrics>metrics.data",
+                "from": {
+                    "node": "selfplay",
+                    "port": "metrics"
+                },
+                "to": {
+                    "node": "metrics",
+                    "port": "data"
+                }
+            }
+        ],
+        "notes": [],
+        "dash": {
+            "items": {
+                "skill": {
+                    "x": 0,
+                    "y": 0,
+                    "w": 6,
+                    "h": 7
+                },
+                "games": {
+                    "x": 6,
+                    "y": 0,
+                    "w": 6,
+                    "h": 7
+                },
+                "speed": {
+                    "x": 0,
+                    "y": 7,
+                    "w": 4,
+                    "h": 8
+                },
+                "first": {
+                    "x": 4,
+                    "y": 7,
+                    "w": 5,
+                    "h": 8
+                },
+                "metrics": {
+                    "x": 0,
+                    "y": 15,
+                    "w": 9,
+                    "h": 3
+                }
+            }
+        }
+    }
+}

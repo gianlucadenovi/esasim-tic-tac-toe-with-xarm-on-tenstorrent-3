@@ -1,0 +1,202 @@
+{
+    "name": "4 · Calibrate the arm and the camera",
+    "description": "The pen touches the board's four corners (dry run first), and the camera checks it finds and straightens the board.",
+    "published_version": 0,
+    "updated": "2026-11-07 16:59:54",
+    "graph": {
+        "nodes": [
+            {
+                "id": "arm",
+                "type": "xarm",
+                "x": -360,
+                "y": -60,
+                "params": {
+                    "ip": "192.168.1.200",
+                    "action": "touch corners",
+                    "dry_run": true,
+                    "board_x": 390,
+                    "board_y": -70,
+                    "board_rotation": 90,
+                    "board_size": 140,
+                    "z_draw": 100,
+                    "z_up": 130,
+                    "speed": 50,
+                    "accel": 300
+                },
+                "title": "Pen to the four corners"
+            },
+            {
+                "id": "camera",
+                "type": "ws-read-board",
+                "x": 60,
+                "y": 360,
+                "params": {
+                    "camera": "0",
+                    "shots": 3,
+                    "every": 1,
+                    "save_cells": false
+                },
+                "title": "Camera finds the board"
+            },
+            {
+                "id": "next",
+                "type": "controls-view",
+                "x": 440,
+                "y": -80,
+                "params": {
+                    "controls": "button Next corner",
+                    "channel": "corner",
+                    "to": "arm"
+                },
+                "title": "Next corner"
+            },
+            {
+                "id": "corners",
+                "type": "table-view",
+                "x": 440,
+                "y": 180,
+                "params": {
+                    "rows": 20
+                },
+                "title": "Corners reached"
+            },
+            {
+                "id": "pose",
+                "type": "chart",
+                "x": 140,
+                "y": -260,
+                "params": {
+                    "kind": "line",
+                    "y": "x,y,z",
+                    "channel": "pose",
+                    "last": 600,
+                    "title": "x, y, z (mm)"
+                },
+                "title": "Pen position"
+            },
+            {
+                "id": "corner_tel",
+                "type": "telemetry",
+                "x": 140,
+                "y": 138,
+                "params": {
+                    "interval": 1,
+                    "channels": "corner"
+                },
+                "title": "Corners only"
+            },
+            {
+                "id": "board",
+                "type": "image-view",
+                "x": 440,
+                "y": 580,
+                "params": {
+                    "size": "large"
+                },
+                "title": "The board as the camera sees it"
+            },
+            {
+                "id": "straight",
+                "type": "image-view",
+                "x": 440,
+                "y": 360,
+                "params": {
+                    "size": "large"
+                },
+                "title": "Straightened boards"
+            }
+        ],
+        "edges": [
+            {
+                "id": "arm.telemetry>pose.data",
+                "from": {
+                    "node": "arm",
+                    "port": "telemetry"
+                },
+                "to": {
+                    "node": "pose",
+                    "port": "data"
+                }
+            },
+            {
+                "id": "arm.telemetry>corner_tel.from",
+                "from": {
+                    "node": "arm",
+                    "port": "telemetry"
+                },
+                "to": {
+                    "node": "corner_tel",
+                    "port": "from"
+                }
+            },
+            {
+                "id": "corner_tel.stream>corners.data",
+                "from": {
+                    "node": "corner_tel",
+                    "port": "stream"
+                },
+                "to": {
+                    "node": "corners",
+                    "port": "data"
+                }
+            },
+            {
+                "id": "camera.telemetry>board.images",
+                "from": {
+                    "node": "camera",
+                    "port": "telemetry"
+                },
+                "to": {
+                    "node": "board",
+                    "port": "images"
+                }
+            },
+            {
+                "id": "camera.board>straight.images",
+                "from": {
+                    "node": "camera",
+                    "port": "board"
+                },
+                "to": {
+                    "node": "straight",
+                    "port": "images"
+                }
+            }
+        ],
+        "notes": [],
+        "dash": {
+            "items": {
+                "next": {
+                    "x": 0,
+                    "y": 0,
+                    "w": 4,
+                    "h": 7
+                },
+                "corners": {
+                    "x": 4,
+                    "y": 0,
+                    "w": 6,
+                    "h": 7
+                },
+                "pose": {
+                    "x": 0,
+                    "y": 7,
+                    "w": 6,
+                    "h": 7
+                },
+                "board": {
+                    "x": 6,
+                    "y": 7,
+                    "w": 6,
+                    "h": 8
+                },
+                "straight": {
+                    "x": 0,
+                    "y": 14,
+                    "w": 6,
+                    "h": 8
+                }
+            }
+        }
+    }
+}

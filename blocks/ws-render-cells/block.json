@@ -1,0 +1,69 @@
+{
+    "id": "ws-render-cells",
+    "version": "1",
+    "name": "Render cells",
+    "category": "Simulation",
+    "icon": "image",
+    "side": "backend",
+    "customizable": true,
+    "summary": "Synthetic pictures of tic-tac-toe cells (empty, X, O) as a camera sees them on paper, to train the board reader.",
+    "help": "Draws marks of many hands and pens on paper of many tones, with uneven light, small perspective, blur, noise and bits of the grid lines at the edges, like the crops the Tic-tac-toe game cuts from the camera. Writes one compressed file (cells_01.npz: x = N x 32 x 32 grey pictures, y = 0 empty, 1 X, 2 O; about 1 MB per 1,000 cells, so it stays on the machine) and a mosaic of examples. Live: cells per second and a mosaic every 2,000 cells. About 1,500 cells per second on one CPU core.",
+    "inputs": [],
+    "outputs": [
+        {
+            "id": "cells",
+            "label": "Cells",
+            "type": "files",
+            "formats": [
+                "npz"
+            ],
+            "help": "cells_01.npz: x (N x 32 x 32 uint8), y (0 empty, 1 X, 2 O)"
+        },
+        {
+            "id": "samples",
+            "label": "Examples",
+            "type": "files",
+            "formats": [
+                "png"
+            ],
+            "help": "A mosaic of the first 192 cells"
+        }
+    ],
+    "params": [
+        {
+            "key": "count",
+            "label": "Cells",
+            "type": "number",
+            "default": 30000,
+            "min": 100,
+            "max": 500000
+        },
+        {
+            "key": "size",
+            "label": "Size (pixels)",
+            "type": "number",
+            "default": 32,
+            "min": 16,
+            "max": 64,
+            "help": "32 for Train cell reader"
+        },
+        {
+            "key": "seed",
+            "label": "Seed",
+            "type": "number",
+            "default": 1,
+            "min": 0,
+            "max": 1000000
+        }
+    ],
+    "hardware": [
+        "cpu"
+    ],
+    "packages": [
+        "numpy",
+        "pillow"
+    ],
+    "esasim": {
+        "version": 1
+    }
+}
