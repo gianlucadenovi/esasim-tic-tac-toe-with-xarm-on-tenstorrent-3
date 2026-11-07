@@ -11,7 +11,7 @@
         {
             "name": "0 · Robot test (online, joint by joint)",
             "file": "blueprints/0-robot-test-online-joint-by-joint.json",
-            "published_version": 0,
+            "published_version": 1,
             "nodes": 7
         },
         {

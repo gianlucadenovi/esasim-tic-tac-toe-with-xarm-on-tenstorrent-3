@@ -5,7 +5,7 @@
     },
     "name": "0 · Robot test (online, joint by joint)",
     "description": "Checks that the xArm answers and is healthy, then moves it one joint at a time, slowly, from the View: J1 − … J6 +, Back to start, Stop.",
-    "published_version": 0,
+    "published_version": 1,
     "updated": "2026-11-07 21:05:06",
     "graph": {
         "nodes": [
