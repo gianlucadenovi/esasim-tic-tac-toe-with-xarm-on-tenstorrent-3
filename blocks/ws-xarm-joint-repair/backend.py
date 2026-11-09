@@ -1,5 +1,5 @@
 # ── EsaSim block ──────────────────────────────────────────────────────
-# xArm joint repair (ws-xarm-joint-repair) · version 4 · machine block, Python: def run(ctx)
+# xArm joint repair (ws-xarm-joint-repair) · version 5 · machine block, Python: def run(ctx)
 # A wizard for UFACTORY's joint-encoder repair (S17, S18) and zero reset: one instruction at a time, a ✓ or ✗ after each, then the next step.
 # Workspace: Gianluca De Novi's workspace · Author: Gianluca De Novi
 # Saved: 2026-11-09
@@ -28,13 +28,14 @@ It follows UFACTORY's procedure for a joint's encoder error (S17 single-turn, S1
 joint's zero again, for arms whose UFACTORY Studio has no Joint debug page (Studio before 2.4.0). The commands are
 those of that page, sent through the xArm SDK:
 
-    H101 D0813 V2   I<joint>   clear the encoder error (as UFACTORY support wrote)   set_servo_addr_16(j, 0x0813, 2)
-    H101 D0813 V256 I<joint>   clear the multi-turn error (UFACTORY's S18 article)    set_servo_addr_16(j, 0x0813, 256)
-    H101 D0104 V1   I<joint>   unlock the joint, to turn it by hand                  set_servo_addr_16(j, 0x0104, 1)
-    D13 I<joint>               the joint's present position becomes 0°              set_servo_zero(j)
+    H101 D0813 V2   I<joint>   clear the single-turn encoder error (S17)          set_servo_addr_16(j, 0x0813, 2)
+    H101 D0813 V256 I<joint>   clear the multi-turn encoder error (S18)           set_servo_addr_16(j, 0x0813, 256)
+    H101 D0104 V1   I<joint>   unlock the joint, to turn it by hand              set_servo_addr_16(j, 0x0104, 1)
+    D13 I<joint>               the joint's present position becomes 0°          set_servo_zero(j)
 
-A command is sent only from the step that shows it, with the button Send this command; every command and the arm's
-answer go to joint_repair.csv. Robot = rehearsal sends nothing: a pretend arm with an S18 error answers."""
+While the controller has an error not cleared, it answers 1 to every command (2 for a warning): the command is
+taken all the same. A command is sent only from the step that shows it, with the button Send this command; every
+command and the arm's answer go to joint_repair.csv. Robot = rehearsal sends nothing: a pretend arm answers."""
 import csv
 import signal
 import time
@@ -42,7 +43,7 @@ import time
 ENCODER_REG = 0x0813
 UNLOCK_REG = 0x0104
 
-BUTTONS = {"done, next": "done", "send this command": "send", "yes": "yes", "no": "no",
+BUTTONS = {"done, next": "done", "send this command": "send", "yes": "yes", "no": "no", "try again": "again",
            "back": "back", "start over": "restart", "finish": "finish"}
 
 
@@ -80,19 +81,23 @@ class Rehearsal:
         for i in range(1, 9):
             bad = i == self.bad and self.code
             out.append({"servo_id": i, "status": self.status if bad else 0, "code": self.code if bad else 0,
-                        "title": "Multi-turn Encoder Error" if bad else "Normal", "desc": ""})
+                        "title": {18: "Multi-turn Encoder Error", 17: "Single-turn Encoder Error"}.get(self.code, "Normal") if bad else "Normal", "desc": ""})
         return 0, out
 
     def set_servo_addr_16(self, servo_id=None, addr=None, value=None):
+        """Like the arm on 2026-11-08: V256 turns S18 into S17, V2 clears S17 at the next E-stop; answers 1 while in error."""
         if addr == ENCODER_REG and servo_id == self.bad:
-            self.cleared = True
+            if self.code == 18 and value == 256:
+                self.code = 17
+            elif self.code == 17 and value == 2:
+                self.cleared = True
         if addr == UNLOCK_REG and value == 1:
             self.unlocked = servo_id
-        return 0
+        return 1 if self.error_code else 0
 
     def set_servo_zero(self, servo_id=None):
         self.offset[servo_id - 1] = -self.true_q[servo_id - 1]
-        return 0
+        return 1 if self.error_code else 0
 
     def estop(self):
         self.unlocked = None
@@ -233,6 +238,17 @@ def run(ctx):
     def command():
         return "H101 D0813 V%d I%d" % (W["value"], joint() or 0)
 
+    def taken(code):
+        """The arm's answer to a command: 0 taken; 1 and 2 taken too, the controller only adds that it still has an
+        error (1) or a warning (2) not cleared yet, which is expected while a joint is being repaired."""
+        return code in (0, 1, 2)
+
+    def answer(cmd, code):
+        if code == 0:
+            return "✓ Sent %s: the arm took it (answer 0)." % cmd
+        return ("✓ Sent %s: the arm took it. (Its answer, code %s, only says that the controller still has an %s not cleared yet: "
+                "that is expected until the end of the repair.)" % (cmd, code, "error" if code == 1 else "warning"))
+
     def reading():
         q, bad, err, h = snapshot()
         j = joint()
@@ -262,6 +278,8 @@ def run(ctx):
         if bad:
             j, code, status, title = bad[0]
             W["joint"] = j
+            if not W.get("value_chosen"):
+                W["value"] = 256 if code == 18 else 2
             others = (" Other joints report errors too (%s): repair one at a time." % ", ".join("J%d S%d" % (b[0], b[1]) for b in bad[1:])) if len(bad) > 1 else ""
             return ("Read the arm",
                     "This is an xArm %d, firmware %s.\nJoint %d reports S%d (%s), status %d; the controller reports %s.%s\n"
@@ -294,9 +312,10 @@ def run(ctx):
         bad = [x for x in (W["info"].get("bad") or []) if x[0] == j]
         note = ""
         if bad and bad[0][1] == 18:
-            note = ("\nNote: joint %d reports S18 (multi-turn), status %d. Minna wrote V2. UFACTORY's article for S18 errors uses V256 instead, "
-                    "and only when the status is 0 or 8 (otherwise it says to contact them). If you are not sure which, ask Minna before sending. "
-                    "Clear command below chooses V2 or V256." % (j, bad[0][2]))
+            note = ("\nJoint %d reports S18 (multi-turn encoder error): UFACTORY's article for S18 uses V256 (V2 is for S17, single-turn). "
+                    "Once S18 is cleared, the joint may show S17 next: then V2, as Minna wrote. Clear command below chooses V2 or V256." % j)
+        elif bad and bad[0][1] == 17:
+            note = "\nJoint %d reports S17 (single-turn encoder error): V2, as Minna wrote and as UFACTORY's article for S17 says." % j
         return ("Clear the encoder error",
                 "This sends the command that clears the error of joint %d:\n      %s\n"
                 "Nothing moves. Press Send this command.%s" % (j, command(), note), ("send",))
@@ -306,10 +325,10 @@ def run(ctx):
         ensure(3)
         code = sdk("set_servo_addr_16")(servo_id=j, addr=ENCODER_REG, value=W["value"])
         record(command(), "set_servo_addr_16(%d, 0x0813, %d)" % (j, W["value"]), code)
-        if code != 0:
+        if not taken(code):
             W["last"] = "✗ Sent %s: the arm answered code %s, it did not take it. Press Send this command to try again, or Finish and write to UFACTORY." % (command(), code)
             return None
-        W["last"] = "✓ Sent %s: the arm accepted it (answer 0)." % command()
+        W["last"] = answer(command(), code)
         return "estop1"
 
     def step_estop1():
@@ -321,6 +340,14 @@ def run(ctx):
             return None
         q, bad, err, h = snapshot()
         still = [x for x in (bad or []) if x[0] == joint()]
+        before = [x for x in (W["info"].get("bad") or []) if x[0] == joint()]
+        W["info"]["bad"] = bad
+        if still and before and still[0][1] != before[0][1]:
+            W["value_chosen"] = False
+            W["value"] = 256 if still[0][1] == 18 else 2
+            W["last"] = ("✓ S%d is cleared. Joint %d now reports S%d (status %d): it needs its own command, %s."
+                         % (before[0][1], joint(), still[0][1], still[0][2], command()))
+            return "send_clear"
         if still:
             W["last"] = "✗ Joint %d still reports S%d (status %d)." % (joint(), still[0][1], still[0][2])
             return "retry"
@@ -330,9 +357,9 @@ def run(ctx):
     def step_retry():
         return ("The error is still there",
                 "What you can do:\n"
-                "• Press Back to send the command again (you can change Clear command to V2 or V256 first), then the E-stop again.\n"
+                "• Press Try again to send the command again (you can change Clear command to V2 or V256 first), then the E-stop again.\n"
                 "• Or press Finish and write to UFACTORY (support@ufactory.cc): the file joint_repair.csv in Results has every command and the arm's answers.",
-                ("back", "finish"))
+                ("again", "finish"))
 
     def step_clear_arm():
         err = snapshot()[3]["error"]
@@ -400,10 +427,10 @@ def run(ctx):
         ensure(3)
         code = sdk("set_servo_addr_16")(servo_id=j, addr=UNLOCK_REG, value=1)
         record("H101 D0104 V1 I%d" % j, "set_servo_addr_16(%d, 0x0104, 1)" % j, code)
-        if code != 0:
+        if not taken(code):
             W["last"] = "✗ The arm answered code %s: the joint may still be locked. Do not force it." % code
             return None
-        W["last"] = "✓ Joint %d is unlocked." % j
+        W["last"] = "✓ Joint %d is unlocked (answer %s)." % (j, code)
         return "turn"
 
     def step_turn():
@@ -436,10 +463,10 @@ def run(ctx):
         ensure(3)
         code = sdk("set_servo_zero")(servo_id=j)
         record("D13 I%d" % j, "set_servo_zero(%d)" % j, code)
-        if code != 0:
+        if not taken(code):
             W["last"] = "✗ The arm answered code %s: it did not take it." % code
             return None
-        W["last"] = "✓ Sent D13 I%d: the arm accepted it (answer 0)." % j
+        W["last"] = answer("D13 I%d" % j, code)
         return "estop3"
 
     def step_estop3():
@@ -458,12 +485,12 @@ def run(ctx):
                 "Press Finish to end. Then move the arm slowly once with UFACTORY Studio to check it." % joint(), ("finish",))
 
     STEPS = {"read": (step_read, act_read), "mark": (step_mark, None), "send_clear": (step_send_clear, act_send_clear),
-             "estop1": (step_estop1, act_estop1), "retry": (step_retry, None), "clear_arm": (step_clear_arm, act_clear_arm),
+             "estop1": (step_estop1, act_estop1), "retry": (step_retry, lambda b: "send_clear"), "clear_arm": (step_clear_arm, act_clear_arm),
              "zero_ok": (step_zero_ok, act_zero_ok), "zero_intro": (step_zero_intro, act_zero_intro), "unlock": (step_unlock, act_unlock),
              "turn": (step_turn, act_turn), "estop2": (step_estop2, act_estop2), "send_zero": (step_send_zero, act_send_zero),
              "estop3": (step_estop3, act_estop3), "done": (step_done, None)}
     NEXT = {"mark": "send_clear"}
-    LABEL = {"done": "Done, next", "send": "Send this command", "yes": "Yes", "no": "No", "back": "Back", "finish": "Finish"}
+    LABEL = {"done": "Done, next", "send": "Send this command", "yes": "Yes", "no": "No", "again": "Try again", "back": "Back", "finish": "Finish"}
 
     CHOICES = {"read": ("joint",), "send_clear": ("command",), "retry": ("command",)}
 
@@ -548,6 +575,7 @@ def run(ctx):
                     show()
                 elif cl == "command":
                     W["value"] = 256 if "256" in str(v) else 2
+                    W["value_chosen"] = True
                     W["last"] = "✓ The clear command is now %s." % command()
                     show()
                 elif cl in BUTTONS:
