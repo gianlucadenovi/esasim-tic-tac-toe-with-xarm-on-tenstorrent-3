@@ -61,7 +61,7 @@ An [EsaSim](https://esacode.com/) project of the workspace Gianluca De Novi's wo
 ### Workspace blocks it uses
 
 - [xArm joint test](blocks/ws-xarm-joint-test) · version 3
-- [xArm 6 model](blocks/ws-xarm-6-model) · version 1
+- [xArm model](blocks/ws-xarm-6-model) · version 2
 - [xArm joint repair](blocks/ws-xarm-joint-repair) · version 2
 - [Board sheet](blocks/ws-board-sheet) · version 2
 - [Simulate games](blocks/ws-simulate-games) · version 1

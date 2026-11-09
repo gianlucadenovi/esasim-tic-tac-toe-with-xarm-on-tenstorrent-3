@@ -60,8 +60,8 @@
         },
         {
             "id": "ws-xarm-6-model",
-            "version": 1,
-            "name": "xArm 6 model"
+            "version": 2,
+            "name": "xArm model"
         },
         {
             "id": "ws-xarm-joint-repair",
