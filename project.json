@@ -12,7 +12,7 @@
         {
             "name": "0 · Play in simulation, the real arm following",
             "file": "blueprints/0-play-in-simulation-the-real-arm-following.json",
-            "published_version": 5,
+            "published_version": 6,
             "nodes": 17
         },
         {
