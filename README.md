@@ -72,7 +72,7 @@ An [EsaSim](https://esacode.com/) project of the workspace Gianluca De Novi's wo
 - [Train cell reader](blocks/ws-train-cell-reader) · version 2
 - [Train player by self-play](blocks/ws-train-player-by-self-play) · version 2
 - [Read board](blocks/ws-read-board) · version 2
-- [Tic-tac-toe game](blocks/ws-tic-tac-toe-game) · version 6
+- [Tic-tac-toe game](blocks/ws-tic-tac-toe-game) · version 7
 - [xArm teach and repeat](blocks/ws-xarm-teach-and-repeat) · version 2
 
 Keys pasted in blocks (secret settings) are not saved here. Datasets, results and the team stay in EsaSim.

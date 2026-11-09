@@ -1,12 +1,12 @@
 # ── EsaSim block ──────────────────────────────────────────────────────
-# Tic-tac-toe game (ws-tic-tac-toe-game) · version 6 · machine block, Python: def run(ctx)
+# Tic-tac-toe game (ws-tic-tac-toe-game) · version 7 · machine block, Python: def run(ctx)
 # The xArm plays tic-tac-toe on paper against a visitor, in simulation (the digital twin) or with the real arm and camera.
 # Workspace: Gianluca De Novi's workspace · Author: Gianluca De Novi
-# Saved: 2026-11-07
+# Saved: 2026-11-09
 #
 # Inputs   ctx.inputs["id"] is a list of files: .path .name .size .read_text() .read_json()
 #   models      Files (pt)                Models · several · optional · reader.pt and player.pt (the models dataset, or the training blocks)
-#   robot       Files (gz, json)          Robot model · optional · xarm6.robot.json.gz from xArm 6 model
+#   robot       Files (gz, json)          Robot model · optional · xarm6.robot.json.gz from xArm model
 # Outputs  ctx.output("id", "name.ext") is the path to write; ctx.write_json / ctx.write_text
 #   games       Files (json, png)         Games · game_001.json: who started, moves, times, result; the simulated paper
 #   cells       Files (npz)               Real cells · The cells seen in the games, labelled by the game
@@ -66,7 +66,13 @@ and the camera simulated) or with the real arm and camera. One long-running bloc
 the arm for the whole session: it draws the grid, plays its moves with the pen, and reads the visitor's moves with the
 camera and the board reader. In simulation the visitor chooses a cell in the Controls view (or a simulated visitor
 plays) and a simulated hand draws it, so the whole chain runs: camera, reader, player, arm. With the real arm, its
-twin follows every move, and how far the real arm is from its twin is reported live."""
+twin follows every move, and how far the real arm is from its twin is reported live.
+
+In simulation, the switch Real arm in the controls makes the real xArm (at Arm IP address) follow the digital twin:
+it first comes gently to the twin's pose, then receives the twin's joint angles as they are computed (servo mode,
+every 20 ms). Every motion of the twin is planned and checked before it moves, so the real arm only follows checked
+motions; while it follows, the simulation runs no faster than real time, and a jump faster than 60°/s becomes a
+gentle catch-up move. Switched off (or on any error of the arm), the real arm holds where it is."""
 import csv
 import json
 import math
@@ -143,10 +149,30 @@ def run(ctx):
     if cam is not None and not reader:
         ctx.log("No reader.pt among the models: the camera is not used, moves come from the controls.")
         cam = None
+    mirror = None
     if sim:
         arm = TwinArm(ctx, p, sheet, place, realtime=float(p.get("sim_speed", 1)))
         ctx.log("Simulation: the digital twin of the xArm 6 (%s), pen %.0f mm, paper at z = %.0f mm, camera %s." % (
             "UFACTORY meshes" if arm_model else "no model connected", arm.pen_length, place.z, (cam.mount if sim_cam else cam_spec)))
+        # the switch Real arm: the real xArm follows the twin. The switch is read whenever the game reads its
+        # controls, and every 0.2 s while the twin moves; the game's other messages are kept for it.
+        mirror = Mirror(ctx, p, say, arm)
+        arm.mirror = mirror
+        _messages, pending = ctx.messages, []
+
+        def poll():
+            for m in _messages(channel):
+                if not mirror.take(m):
+                    pending.append(m)
+
+        def messages(ch=None, wait=0.0):
+            out = list(pending)
+            del pending[:]
+            if not out:
+                out = [m for m in _messages(ch, wait=wait) if not mirror.take(m)]
+            return out
+        ctx.messages = messages
+        arm.poll = poll
     else:
         arm = TwinChecked(ctx, p)
     board_geo = Board(dict(p, board_size=board_mm))
@@ -416,6 +442,8 @@ def run(ctx):
                 break
     except KeyboardInterrupt:
         arm.stop()
+        if mirror is not None:
+            mirror.halt()
         stopped = True
         raise
     finally:
@@ -437,6 +465,8 @@ def run(ctx):
             arm.report(force=True)
         finally:
             arm.close()
+            if mirror is not None:
+                mirror.close()
     say("Goodbye.")
     res = {"games": games_played, "robot_wins": results.count("robot"), "draws": results.count("draw"), "visitor_wins": results.count("visitor"),
            "robot": robot_sym, "player": mode, "simulation": sim}
@@ -518,6 +548,11 @@ class TwinChecked:
         if failed:
             self.ctx.log("Not accepted by this controller (the twin still checks every move): " + ", ".join(failed) + ".")
         self.ctx.telemetry("limits", {"set": done, "not_set": failed})
+        try:
+            if api.warn_code:
+                api.clean_warn()  # older firmware refuses some settings with a warning, which would hold up the next moves
+        except Exception:
+            pass
 
     def _check_arm(self):
         api = self.real.api
@@ -1312,6 +1347,134 @@ def trapezoid(dist, vmax, amax):
     return T, s
 
 
+def _minjerk(u):
+    u = min(1.0, max(0.0, u))
+    return u * u * u * (10.0 - 15.0 * u + 6.0 * u * u)
+
+
+class Mirror:
+    """The real xArm following the digital twin, switched on and off with the switch Real arm. On: it connects to
+    the arm at Arm IP address, comes gently to the twin's pose (minimum jerk, at most 20°/s), then gets every pose
+    of the twin (servo mode). A jump faster than 60°/s becomes a gentle catch-up move instead. Off, or on any error
+    of the arm: it holds where it is."""
+    MAX_SPEED = 60.0
+    MOVE_SPEED = 20.0
+
+    def __init__(self, ctx, p, say, arm):
+        self.ctx, self.p, self.say, self.arm = ctx, p, say, arm
+        self.api, self.active, self.last, self.t_last = None, False, None, 0.0
+
+    def take(self, m):
+        """True if the message is the switch Real arm (and acts on it)."""
+        d = m.get("data") if isinstance(m.get("data"), dict) else None
+        if not d or str(d.get("control", "")).strip().lower() not in ("real arm", "mirror"):
+            return False
+        on = d.get("value") in (True, 1, "1", "true", "on", "yes")
+        if on:
+            self.start()
+        else:
+            self.stop("Real arm off: only the simulation moves now; the real arm holds where it is.")
+        return True
+
+    def start(self):
+        if self.active:
+            return
+        ip = str(self.p.get("ip") or "").strip()
+        try:
+            if self.api is None:
+                from xarm.wrapper import XArmAPI
+                self.say("Connecting to the real arm at %s…" % ip)
+                self.api = XArmAPI(ip, is_radian=False)
+            if not self.api.connected:
+                self.api.connect()
+            if not self.api.connected:
+                raise RuntimeError("it does not answer at %s" % ip)
+            if self.api.warn_code:
+                self.api.clean_warn()
+            if self.api.error_code:
+                raise RuntimeError("it reports error C%s: clear it first (UFACTORY Studio or flow 0b)" % self.api.error_code)
+            self.api.motion_enable(enable=True)
+            self.api.set_mode(1)
+            self.api.set_state(state=0)
+            time.sleep(0.3)
+            code, a = self.api.get_servo_angle(is_radian=False)
+            if code != 0 or not a:
+                raise RuntimeError("it does not give its joint angles (code %s)" % code)
+            self.last, self.t_last = [float(v) for v in a[:6]], time.time()
+            self.active = True
+            self.say("Real arm on: it comes gently to the simulated arm's pose, then follows it.")
+            self.ctx.telemetry("mirror", {"on": True})
+            self.goto(self.arm.q)
+        except Exception as e:
+            self.active = False
+            self.say("The real arm cannot follow: %s." % e)
+            self.ctx.telemetry("mirror", {"on": False, "why": str(e)})
+
+    def send(self, q):
+        code = self.api.set_servo_angle_j(q, is_radian=False)
+        self.last, self.t_last = list(q), time.time()
+        if code not in (0, 2) and self.api.error_code:
+            self.stop("The real arm stopped with error C%s: it no longer follows. Clear the error, then switch Real arm on again." % self.api.error_code)
+            return False
+        return True
+
+    def goto(self, q):
+        """A gentle move of the real arm from where it is to q; returns the seconds it took."""
+        q = [float(v) for v in q[:6]]
+        far = max(abs(a - b) for a, b in zip(q, self.last))
+        if far < 0.05:
+            return 0.0
+        T = max(1.0, 1.875 * far / self.MOVE_SPEED)
+        a0, t0 = list(self.last), time.time()
+        while self.active:
+            u = min(1.0, (time.time() - t0) / T)
+            if not self.send([x + (y - x) * _minjerk(u) for x, y in zip(a0, q)]) or u >= 1.0:
+                break
+            time.sleep(0.01)
+        return time.time() - t0
+
+    def follow(self, q):
+        """The twin's new pose for the real arm; returns the seconds the twin must wait (a catch-up move)."""
+        if not self.active:
+            return 0.0
+        q = [float(v) for v in q[:6]]
+        dt = max(0.02, time.time() - self.t_last)
+        if max(abs(a - b) for a, b in zip(q, self.last)) > self.MAX_SPEED * dt + 0.5:
+            return self.goto(q)
+        self.send(q)
+        return 0.0
+
+    def stop(self, why=None):
+        if self.active and self.api is not None:
+            try:
+                self.api.set_mode(0)
+                self.api.set_state(state=0)
+            except Exception:
+                pass
+        was, self.active = self.active, False
+        if why and (was or self.api is not None):
+            self.say(why)
+        self.ctx.telemetry("mirror", {"on": False})
+
+    def halt(self):
+        """The run is stopped: the real arm stops at once."""
+        if self.api is not None:
+            try:
+                self.api.set_state(4)
+            except Exception:
+                pass
+        self.active = False
+
+    def close(self):
+        if self.active:
+            self.stop()
+        if self.api is not None:
+            try:
+                self.api.disconnect()
+            except Exception:
+                pass
+
+
 class TwinArm:
     """The arm in simulation, with the calls of the real one (move, stroke, travel, home, report, stop, close). Every
     motion is planned whole before it starts and refused if any point of it leaves the allowed space: the tool point
@@ -1352,6 +1515,7 @@ class TwinArm:
         self.drawn = 0.0
         self._tip_prev = None
         self.planned = None
+        self.mirror, self.poll, self._polled = None, None, 0.0
         self.report(force=True)
 
     def tip(self):
@@ -1409,6 +1573,14 @@ class TwinArm:
         if self.log:
             self.log.writerow([round(time.time(), 3)] + [round(v, 2) for v in self.pose[:3]] + [round(v, 2) for v in self.q] + [int(bool(down)), 1])
         self.report()
+        blocked = 0.0
+        if self.mirror is not None:
+            if self.poll is not None and time.time() - self._polled > 0.2:
+                self._polled = time.time()
+                self.poll()
+                blocked = time.time() - self._polled  # switching Real arm on waits for the real arm to come
+            blocked += self.mirror.follow(self.q)
+        return blocked
 
     # -- planning ---------------------------------------------------------------
     def plan_line(self, points):
@@ -1466,9 +1638,12 @@ class TwinArm:
         steps = max(1, int(math.ceil(T / dt)))
         t0 = time.time()
         for i in range(1, steps + 1):
-            self._set(at(i / steps))
-            if self.realtime > 0:
-                wait_s = t0 + (T * i / steps) / self.realtime - time.time()
+            t0 += self._set(at(i / steps)) or 0.0  # time the real arm took to catch up, if it had to
+            rt = self.realtime
+            if self.mirror is not None and self.mirror.active and not (0 < rt <= 1):
+                rt = 1.0  # the real arm follows: no faster than real time
+            if rt > 0:
+                wait_s = t0 + (T * i / steps) / rt - time.time()
                 if wait_s > 0:
                     time.sleep(wait_s)
         self.report(force=True)
@@ -1627,6 +1802,11 @@ class Arm:
             except Exception:
                 failed.append(name)
         self.ctx.log("Limits set in the arm's controller: " + (", ".join(done) or "none") + "." + (" Not accepted: " + ", ".join(failed) + "." if failed else ""))
+        try:
+            if api.warn_code:
+                api.clean_warn()  # older firmware refuses some settings with a warning, which would hold up the next moves
+        except Exception:
+            pass
 
     # -- reporting -------------------------------------------------------------
     def report(self, force=False):

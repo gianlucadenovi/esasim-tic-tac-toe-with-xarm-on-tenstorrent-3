@@ -7,7 +7,7 @@
     "side": "backend",
     "customizable": true,
     "summary": "The xArm plays tic-tac-toe on paper against a visitor, in simulation (the digital twin) or with the real arm and camera.",
-    "help": "Robot = simulation: the digital twin of the xArm 6 (UFACTORY's kinematics) draws with its pen on simulated paper, the simulated camera takes the pictures, and the visitor clicks a cell on the board in the Controls view (or a simulated visitor plays, Visitor = random or perfect): a simulated hand draws the mark and the game reads it with the camera and the board reader, so the whole chain runs and the reading is checked (live: reading). Robot = real xArm: the arm at Arm IP address (its Python SDK, straight over the network) and the camera of the machine; the visitor draws and presses Your move, or clicks the cell. Who starts: by default the robot and the visitor take turns, the robot starting the first game; each keeps its mark. Safety: every motion is planned whole and checked on the digital twin before anything moves (tool point inside the safe box and away from the base, pen not into the table, elbow and wrist above it, joints within their limits, no sudden swing of a joint), then runs smoothly with speed and acceleration capped (pen at most 150 mm/s, joints at most 60°/s, whatever the settings); with the real arm, its controller is told the limits too (reduced mode, the safe box as a fence). The arm starts at its rest position, goes back there after each move and when the session ends. The board lies with its top towards the arm (rotation 90°), as the visitor sitting opposite reads it. Controls (channel \"control\"): cell N, Your move, New game, Stop. Live: say, board, thinking, read, camera, paper, joints, pose, scene, limits, result.",
+    "help": "Robot = simulation: the digital twin of the xArm 6 (UFACTORY's kinematics) draws with its pen on simulated paper, the simulated camera takes the pictures, and the visitor clicks a cell on the board in the Controls view (or a simulated visitor plays, Visitor = random or perfect): a simulated hand draws the mark and the game reads it with the camera and the board reader, so the whole chain runs and the reading is checked (live: reading). In simulation, the switch Real arm in the Controls view makes the real xArm at Arm IP address follow the digital twin: it first comes gently to the twin's pose (at most 20°/s), then receives the twin's joint angles as they are computed (every 20 ms); the twin's motions are all planned and checked before they run, so the real arm only follows checked motions; while it follows, the simulation runs no faster than real time, and any jump faster than 60°/s becomes a gentle catch-up move. Switched off, or on any error of the arm, the real arm holds where it is (live: mirror). Robot = real xArm: the arm at Arm IP address (its Python SDK, straight over the network) and the camera of the machine; the visitor draws and presses Your move, or clicks the cell. Who starts: by default the robot and the visitor take turns, the robot starting the first game; each keeps its mark. Safety: every motion is planned whole and checked on the digital twin before anything moves (tool point inside the safe box and away from the base, pen not into the table, elbow and wrist above it, joints within their limits, no sudden swing of a joint), then runs smoothly with speed and acceleration capped (pen at most 150 mm/s, joints at most 60°/s, whatever the settings); with the real arm, its controller is told the limits too (reduced mode, the safe box as a fence; older firmware may refuse some). The arm starts at its rest position, goes back there after each move and when the session ends. The board lies with its top towards the arm (rotation 90°), as the visitor sitting opposite reads it. Controls (channel \"control\"): cell N, Your move, New game, Stop, switch Real arm. Live: say, board, thinking, read, camera, paper, joints, pose, scene, limits, result, mirror.",
     "inputs": [
         {
             "id": "models",
@@ -29,7 +29,7 @@
                 "gz",
                 "json"
             ],
-            "help": "xarm6.robot.json.gz from xArm 6 model"
+            "help": "xarm6.robot.json.gz from xArm model"
         }
     ],
     "outputs": [
@@ -71,7 +71,8 @@
             "options": [
                 "simulation",
                 "real xArm"
-            ]
+            ],
+            "help": "simulation: the digital twin plays; the switch Real arm in the controls makes the real arm follow it"
         },
         {
             "key": "camera",
@@ -106,7 +107,7 @@
             "default": 1,
             "min": 0.1,
             "max": 100,
-            "help": "1 = the arm's real speed"
+            "help": "1 = the arm's real speed (never faster while the real arm follows)"
         },
         {
             "key": "first",
@@ -251,7 +252,8 @@
             "key": "ip",
             "label": "Arm IP address (real xArm)",
             "type": "text",
-            "default": "192.168.1.200"
+            "default": "192.168.1.200",
+            "help": "Also the arm that follows the simulation when Real arm is on"
         },
         {
             "key": "board_x",
@@ -415,6 +417,6 @@
         "xarm-python-sdk"
     ],
     "esasim": {
-        "version": 6
+        "version": 7
     }
 }

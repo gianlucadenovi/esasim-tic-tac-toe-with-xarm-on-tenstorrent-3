@@ -2,13 +2,13 @@
 
 The xArm plays tic-tac-toe on paper against a visitor, in simulation (the digital twin) or with the real arm and camera.
 
-Robot = simulation: the digital twin of the xArm 6 (UFACTORY's kinematics) draws with its pen on simulated paper, the simulated camera takes the pictures, and the visitor clicks a cell on the board in the Controls view (or a simulated visitor plays, Visitor = random or perfect): a simulated hand draws the mark and the game reads it with the camera and the board reader, so the whole chain runs and the reading is checked (live: reading). Robot = real xArm: the arm at Arm IP address (its Python SDK, straight over the network) and the camera of the machine; the visitor draws and presses Your move, or clicks the cell. Who starts: by default the robot and the visitor take turns, the robot starting the first game; each keeps its mark. Safety: every motion is planned whole and checked on the digital twin before anything moves (tool point inside the safe box and away from the base, pen not into the table, elbow and wrist above it, joints within their limits, no sudden swing of a joint), then runs smoothly with speed and acceleration capped (pen at most 150 mm/s, joints at most 60°/s, whatever the settings); with the real arm, its controller is told the limits too (reduced mode, the safe box as a fence). The arm starts at its rest position, goes back there after each move and when the session ends. The board lies with its top towards the arm (rotation 90°), as the visitor sitting opposite reads it. Controls (channel "control"): cell N, Your move, New game, Stop. Live: say, board, thinking, read, camera, paper, joints, pose, scene, limits, result.
+Robot = simulation: the digital twin of the xArm 6 (UFACTORY's kinematics) draws with its pen on simulated paper, the simulated camera takes the pictures, and the visitor clicks a cell on the board in the Controls view (or a simulated visitor plays, Visitor = random or perfect): a simulated hand draws the mark and the game reads it with the camera and the board reader, so the whole chain runs and the reading is checked (live: reading). In simulation, the switch Real arm in the Controls view makes the real xArm at Arm IP address follow the digital twin: it first comes gently to the twin's pose (at most 20°/s), then receives the twin's joint angles as they are computed (every 20 ms); the twin's motions are all planned and checked before they run, so the real arm only follows checked motions; while it follows, the simulation runs no faster than real time, and any jump faster than 60°/s becomes a gentle catch-up move. Switched off, or on any error of the arm, the real arm holds where it is (live: mirror). Robot = real xArm: the arm at Arm IP address (its Python SDK, straight over the network) and the camera of the machine; the visitor draws and presses Your move, or clicks the cell. Who starts: by default the robot and the visitor take turns, the robot starting the first game; each keeps its mark. Safety: every motion is planned whole and checked on the digital twin before anything moves (tool point inside the safe box and away from the base, pen not into the table, elbow and wrist above it, joints within their limits, no sudden swing of a joint), then runs smoothly with speed and acceleration capped (pen at most 150 mm/s, joints at most 60°/s, whatever the settings); with the real arm, its controller is told the limits too (reduced mode, the safe box as a fence; older firmware may refuse some). The arm starts at its rest position, goes back there after each move and when the session ends. The board lies with its top towards the arm (rotation 90°), as the visitor sitting opposite reads it. Controls (channel "control"): cell N, Your move, New game, Stop, switch Real arm. Live: say, board, thinking, read, camera, paper, joints, pose, scene, limits, result, mirror.
 
 An [EsaSim](https://esacode.com/) blueprint block: it runs on a machine, in Python (`backend.py`, `def run(ctx)`).
 
 | | |
 |---|---|
-| Block | `ws-tic-tac-toe-game` · version 6 |
+| Block | `ws-tic-tac-toe-game` · version 7 |
 | Workspace | Gianluca De Novi's workspace |
 | Author | Gianluca De Novi |
 | Runs on | Any machine |
@@ -18,7 +18,7 @@ An [EsaSim](https://esacode.com/) blueprint block: it runs on a machine, in Pyth
 | Port | Type | Description |
 |---|---|---|
 | `models` Models | Files (pt) | reader.pt and player.pt (the models dataset, or the training blocks) Several connections. Optional. |
-| `robot` Robot model | Files (gz, json) | xarm6.robot.json.gz from xArm 6 model Optional. |
+| `robot` Robot model | Files (gz, json) | xarm6.robot.json.gz from xArm model Optional. |
 
 ## Outputs
 
@@ -32,11 +32,11 @@ An [EsaSim](https://esacode.com/) blueprint block: it runs on a machine, in Pyth
 
 | Key | Type | Default | Description |
 |---|---|---|---|
-| `robot` Robot | select | `"simulation"` |  |
+| `robot` Robot | select | `"simulation"` | simulation: the digital twin plays; the switch Real arm in the controls makes the real arm follow it |
 | `camera` Camera | text | `"simulated"` | simulated (with Robot = simulation), or 0, 1 … a device path or stream address; none = moves from the controls |
 | `visitor` Visitor (simulation) | select | `"me (Controls)"` |  |
 | `auto_games` Games with a simulated visitor | number | `5` |  |
-| `sim_speed` Simulation speed | number | `1` | 1 = the arm's real speed |
+| `sim_speed` Simulation speed | number | `1` | 1 = the arm's real speed (never faster while the real arm follows) |
 | `first` Who starts | select | `"take turns"` | Taking turns, the robot starts the first game, the visitor the second, and so on |
 | `robot_plays` The robot plays | select | `"X"` | The mark the robot draws; the visitor draws the other |
 | `player` Player | select | `"learned, checked"` |  |
@@ -54,7 +54,7 @@ An [EsaSim](https://esacode.com/) blueprint block: it runs on a machine, in Pyth
 | `sure` Least confidence to accept a mark | number | `0.7` |  |
 | `minutes` Longest session (minutes) | number | `30` |  |
 | `channel` Controls channel | text | `"control"` |  |
-| `ip` Arm IP address (real xArm) | text | `"192.168.1.200"` |  |
+| `ip` Arm IP address (real xArm) | text | `"192.168.1.200"` | Also the arm that follows the simulation when Real arm is on |
 | `board_x` Board X (mm) | number | `390` | Lower-left corner of the board (marker 3) in the arm's base frame |
 | `board_y` Board Y (mm) | number | `-70` |  |
 | `board_rotation` Board rotation (degrees) | number | `90` | 90: the top of the sheet towards the arm, the way the visitor sitting opposite reads it |
