@@ -1,8 +1,8 @@
 # ── EsaSim block ──────────────────────────────────────────────────────
-# xArm joint test (ws-xarm-joint-test) · version 3 · machine block, Python: def run(ctx)
+# xArm joint test (ws-xarm-joint-test) · version 4 · machine block, Python: def run(ctx)
 # Checks that the xArm is online and healthy, then moves it one joint at a time, slowly, from the Controls view.
 # Workspace: Gianluca De Novi's workspace · Author: Gianluca De Novi
-# Saved: 2026-11-07
+# Saved: 2026-11-09
 #
 # Inputs   ctx.inputs["id"] is a list of files: .path .name .size .read_text() .read_json()
 #   (none)
@@ -43,6 +43,20 @@ MAX_JOINT_SPEED = 30.0   # degrees/s: a test goes slowly, whatever the settings 
 MAX_JOINT_ACC = 120.0
 MAX_STEP = 15.0          # degrees per press, at most
 MARGIN = 5.0             # degrees kept from each joint's end stop
+
+# UFACTORY's API codes, for the ones a setter or a move realistically answers. The SDK returns these: it does
+# not raise, so every call has to be looked at or a failure passes for a success.
+CODE_MEANING = {
+    -4: "the command does not exist in this firmware",
+    -2: "the arm is not ready: not enabled, or no state set",
+    -1: "the arm is not connected",
+    1: "the arm has an error that has not been cleared",
+    2: "the arm has a warning that has not been cleared",
+    3: "no answer in time, usually a command this firmware does not have",
+    4: "the reply's length was wrong",
+    5: "the reply's number was wrong",
+    9: "the emergency stop is pressed",
+}
 
 
 class Stop(Exception):
@@ -178,7 +192,7 @@ def run(ctx):
         return None
 
     # -- the arm --------------------------------------------------------------------------------------------------
-    api, prev_reduced = None, None
+    api, prev_reduced, reduced_on = None, None, False
     q = [float(v) for v in str(p.get("sim_start") or "0,-20,-30,0,50,0").split(",")][:6] if sim else None
 
     def angles():
@@ -252,17 +266,52 @@ def run(ctx):
             api.set_mode(0)
             api.set_state(state=0)
             time.sleep(0.5)
-        try:  # the controller limits the joints' speed by itself too, for the whole test
+
+        # -- the controller's own limits ------------------------------------------------------------------------
+        # Reduced mode and self-collision detection belong to newer firmware. Firmware 1.4 answers 3 (no reply in
+        # time) or 2 (a warning is still latched) instead of taking them. The SDK returns those codes rather than
+        # raising, so each call is looked at: a refused one is named, and the controller warning it latched is
+        # cleared at once — left there, it makes every later command, jogs included, answer 2.
+        fw = str(getattr(api, "version", "") or "?")
+
+        def try_set(name, fn, *args):
+            try:
+                code = fn(*args)
+            except Exception as e:
+                ctx.log("%s: not applied (%s)." % (name, e))
+                return False
+            if isinstance(code, (list, tuple)):
+                code = code[0] if code else -1
+            if code == 0:
+                return True
+            ctx.log("%s: not applied by firmware %s — code %s, %s." % (name, fw, code, CODE_MEANING.get(code, "see UFACTORY's API code list")))
+            try:
+                if api.warn_code:
+                    ctx.log("Controller warning W%s, raised by %s, cleared so it cannot block later commands." % (api.warn_code, name))
+                    api.clean_warn()
+            except Exception:
+                pass
+            return False
+
+        try:
             code, st = api.get_reduced_states()
             if code == 0 and st:
                 prev_reduced = st
-            api.set_reduced_max_joint_speed(speed)
-            api.set_joint_maxacc(accel)
-            api.set_self_collision_detection(True)
-            api.set_reduced_mode(True)
-            ctx.log("Controller limits: joints at most %.0f°/s and %.0f°/s², self-collision detection on." % (speed, accel))
-        except Exception as e:
-            ctx.log("The controller did not take its limits (%s): the test still checks every step and moves slowly." % e)
+        except Exception:
+            pass
+        capped = try_set("Reduced-mode joint speed", api.set_reduced_max_joint_speed, speed)
+        try_set("Joint acceleration", api.set_joint_maxacc, accel)
+        selfcoll = try_set("Self-collision detection", api.set_self_collision_detection, True)
+        reduced_on = try_set("Reduced mode", api.set_reduced_mode, True) if capped else False
+        if reduced_on:
+            ctx.log("Controller limits in force: joints at most %.0f°/s and %.0f°/s²%s."
+                    % (speed, accel, ", self-collision detection on" if selfcoll else "; self-collision detection left as it was"))
+        else:
+            ctx.log("Firmware %s did not take reduced mode%s, so the controller is not policing the speed itself. Every step is still sent "
+                    "with its own %.0f°/s and %.0f°/s² cap and checked before it leaves, which is what keeps the test slow."
+                    % (fw, "" if selfcoll else " or self-collision detection", speed, accel))
+        if api.warn_code:  # nothing below should start with a warning latched
+            api.clean_warn()
 
     start = angles()
     report(start)
@@ -315,7 +364,14 @@ def run(ctx):
             code = api.set_servo_angle(angle=[float(v) for v in target] + ([0.0] * (api.axis - 6) if api.axis > 6 else []), speed=speed, mvacc=accel,
                                        is_radian=False, wait=False)
             if code != 0:
-                say("The arm refused the move (code %s, error %s, warning %s)." % (code, api.error_code, api.warn_code))
+                say("The arm refused the move: code %s, %s (error %s, warning %s)."
+                    % (code, CODE_MEANING.get(code, "see UFACTORY's API code list"), api.error_code, api.warn_code))
+                log.writerow([round(time.time(), 2), "refused"] + [round(v, 2) for v in target] + ["code %s" % code])
+                try:  # a latched warning would refuse every press after this one too
+                    if api.warn_code:
+                        api.clean_warn()
+                except Exception:
+                    pass
                 return
             t0 = time.time()
             time.sleep(0.15)
@@ -405,8 +461,8 @@ def run(ctx):
         raise
     finally:
         if api is not None:
-            try:  # the controller as it was before the test
-                if prev_reduced is not None:
+            try:  # the controller as it was before the test, but only what this test actually changed
+                if reduced_on and prev_reduced is not None:
                     api.set_reduced_mode(bool(prev_reduced[0]))
                 if not stopped:
                     api.set_state(0)
