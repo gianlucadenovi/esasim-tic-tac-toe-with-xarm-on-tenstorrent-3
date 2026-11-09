@@ -15,6 +15,7 @@
 ## Flows
 
 - **0 · Robot test (online, joint by joint)**: Checks that the xArm answers and is healthy, then moves it one joint at a time, slowly, from the View: J1 − … J6 +, Back to start, Stop.
+- **0b · Repair a joint (encoder error, zero)**: UFACTORY's procedure for a joint's S17/S18 encoder error and its zero, step by step with buttons, for an arm without Studio's Joint debug page. Starts in rehearsal: set Robot to real xArm when ready.
 - **1 · Print the board**: The A4 sheet with the four markers the camera finds the board by. Print it at 100%.
 - **2 · Train the board reader (simulation + rendered cells)**: Synthetic cells into the cells-synthetic dataset, then a CNN that reads empty, X or O, trained on the accelerator; the model goes to the models dataset.
 - **3 · Train the player by self-play**: Thousands of games against itself on the accelerator, tested against a random and a perfect player as it learns; the model goes to the models dataset.
@@ -35,7 +36,7 @@
 
 ## What you get
 
-- On the **View** page: *Arm data for the views* (0 · Robot test (online, joint by joint)), *Move the arm* (0 · Robot test (online, joint by joint)), *The arm as it is now* (0 · Robot test (online, joint by joint)), *Arm health (error, warning, state, hottest joint °C)* (0 · Robot test (online, joint by joint)), *Joints* (0 · Robot test (online, joint by joint)), *The sheet* (1 · Print the board), *The simulated camera* (2 · Train the board reader (simulation + rendered cells)), *Cells cut from the simulated pictures* (2 · Train the board reader (simulation + rendered cells)), *Simulation* (2 · Train the board reader (simulation + rendered cells)), *Rendered cells as they are made* (2 · Train the board reader (simulation + rendered cells)), *Rendered examples* (2 · Train the board reader (simulation + rendered cells)), *Training: loss and accuracy* (2 · Train the board reader (simulation + rendered cells)).
+- On the **View** page: *Arm data for the views* (0b · Repair a joint (encoder error, zero)), *Move the arm* (0 · Robot test (online, joint by joint)), *The arm as it is now* (0 · Robot test (online, joint by joint)), *Arm health (error, warning, state, hottest joint °C)* (0 · Robot test (online, joint by joint)), *Joints* (0b · Repair a joint (encoder error, zero)), *Repair, step by step* (0b · Repair a joint (encoder error, zero)), *The arm as it reads now* (0b · Repair a joint (encoder error, zero)), *The sheet* (1 · Print the board), *The simulated camera* (2 · Train the board reader (simulation + rendered cells)), *Cells cut from the simulated pictures* (2 · Train the board reader (simulation + rendered cells)), *Simulation* (2 · Train the board reader (simulation + rendered cells)), *Rendered cells as they are made* (2 · Train the board reader (simulation + rendered cells)).
 
 ## Data and licences
 
@@ -50,6 +51,7 @@ An [EsaSim](https://esacode.com/) project of the workspace Gianluca De Novi's wo
 ### Blueprints in this repository
 
 - [0 · Robot test (online, joint by joint)](blueprints/0-robot-test-online-joint-by-joint.json) · 7 blocks · version 2
+- [0b · Repair a joint (encoder error, zero)](blueprints/0b-repair-a-joint-encoder-error-zero.json) · 6 blocks · version 1
 - [1 · Print the board](blueprints/1-print-the-board.json) · 2 blocks
 - [2 · Train the board reader (simulation + rendered cells)](blueprints/2-train-the-board-reader-simulation-rendered-cells.json) · 14 blocks · version 2
 - [3 · Train the player by self-play](blueprints/3-train-the-player-by-self-play.json) · 6 blocks · version 1
@@ -60,6 +62,7 @@ An [EsaSim](https://esacode.com/) project of the workspace Gianluca De Novi's wo
 
 - [xArm joint test](blocks/ws-xarm-joint-test) · version 3
 - [xArm 6 model](blocks/ws-xarm-6-model) · version 1
+- [xArm joint repair](blocks/ws-xarm-joint-repair) · version 1
 - [Board sheet](blocks/ws-board-sheet) · version 2
 - [Simulate games](blocks/ws-simulate-games) · version 1
 - [Render cells](blocks/ws-render-cells) · version 1

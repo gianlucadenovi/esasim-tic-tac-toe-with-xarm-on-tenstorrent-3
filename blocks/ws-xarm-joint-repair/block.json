@@ -1,0 +1,73 @@
+{
+    "id": "ws-xarm-joint-repair",
+    "version": "1",
+    "name": "xArm joint repair",
+    "category": "Devices",
+    "icon": "robot-arm",
+    "side": "backend",
+    "customizable": true,
+    "summary": "UFACTORY's procedure for a joint's encoder error (S17, S18) and for setting a joint's zero again, step by step from the Controls view, without Studio's Joint debug page.",
+    "help": "For an xArm whose UFACTORY Studio has no Joint debug page (before 2.4.0), or that cannot be updated. It connects to the arm at Arm IP address, reads which joint reports an error (S17 single-turn or S18 multi-turn encoder error) and guides you, one step at a time in the Controls view (live: guide), through UFACTORY's procedure: mark the joint; Clear the encoder error (H101 D0813 V2 I<joint>, or V256 for S18); E-stop; check the zero; if it was lost, Unlock the joint (H101 D0104 V1 I<joint>), turn it by hand to its zero, E-stop, Set this position as zero (D13 I<joint>, sent as the SDK's set_servo_zero), E-stop; Clear the arm's error. Every command that changes the arm is sent only on a second press of its button within 15 seconds, and is written to joint_repair.csv with the arm's answer. Joints 2 and 3 hold the arm up: unlocked, the arm falls unless someone holds it. Robot = rehearsal sends nothing (a pretend arm with an S17 error answers), to learn the steps first. Controls (channel \"control\"): select joint auto,1…7 · select clear S17-single-turn,S18-multi-turn · Check the arm · Clear the encoder error · I pressed and released the E-stop · Unlock the joint · Set this position as zero · Clear the arm's error · Finish. Live: guide (step, text, joint), health (connected, state, error, warning, servo, angles), joints. Use only as UFACTORY's support tells you: these are their debug commands.",
+    "inputs": [],
+    "outputs": [
+        {
+            "id": "log",
+            "label": "Repair log",
+            "type": "table",
+            "formats": [
+                "csv"
+            ],
+            "help": "joint_repair.csv: every command sent, the arm's answer, its errors and joint angles at that moment"
+        }
+    ],
+    "params": [
+        {
+            "key": "robot",
+            "label": "Robot",
+            "type": "select",
+            "default": "rehearsal",
+            "options": [
+                "rehearsal",
+                "real xArm"
+            ],
+            "help": "rehearsal: nothing is sent to any arm; a pretend arm with an S17 error answers, to learn the steps"
+        },
+        {
+            "key": "ip",
+            "label": "Arm IP address",
+            "type": "text",
+            "default": "192.168.1.200"
+        },
+        {
+            "key": "rehearsal_joint",
+            "label": "Joint with the error (rehearsal)",
+            "type": "number",
+            "default": 5,
+            "min": 1,
+            "max": 6
+        },
+        {
+            "key": "minutes",
+            "label": "Longest session (minutes)",
+            "type": "number",
+            "default": 60,
+            "min": 5,
+            "max": 240
+        },
+        {
+            "key": "channel",
+            "label": "Controls channel",
+            "type": "text",
+            "default": "control"
+        }
+    ],
+    "hardware": [
+        "cpu"
+    ],
+    "packages": [
+        "xarm-python-sdk"
+    ],
+    "esasim": {
+        "version": 1
+    }
+}

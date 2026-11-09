@@ -1,0 +1,150 @@
+{
+    "esasim": {
+        "kind": "blueprint",
+        "flow_id": 23
+    },
+    "name": "0b · Repair a joint (encoder error, zero)",
+    "description": "UFACTORY's procedure for a joint's S17/S18 encoder error and its zero, step by step with buttons, for an arm without Studio's Joint debug page. Starts in rehearsal: set Robot to real xArm when ready.",
+    "published_version": 1,
+    "updated": "2026-11-09 03:30:14",
+    "graph": {
+        "nodes": [
+            {
+                "id": "repair",
+                "type": "ws-xarm-joint-repair",
+                "x": 0,
+                "y": 160,
+                "params": {
+                    "robot": "rehearsal",
+                    "ip": "192.168.1.216",
+                    "rehearsal_joint": 5,
+                    "minutes": 60,
+                    "channel": "control"
+                },
+                "title": "xArm joint repair"
+            },
+            {
+                "id": "tel",
+                "type": "telemetry",
+                "x": 380,
+                "y": -60,
+                "params": {
+                    "interval": 0.3,
+                    "channels": "guide,health,joints",
+                    "keep": 5000
+                },
+                "title": "Arm data for the views"
+            },
+            {
+                "id": "controls",
+                "type": "controls-view",
+                "x": 760,
+                "y": -260,
+                "params": {
+                    "controls": "show guide.step\nshow guide.joint\nshow guide.text\nselect joint auto,1,2,3,4,5,6,7\nselect clear S17-single-turn,S18-multi-turn\nbutton Check the arm\nbutton Clear the encoder error\nbutton I pressed and released the E-stop\nbutton Unlock the joint\nbutton Set this position as zero\nbutton Clear the arm's error\nbutton Finish\nshow health.servo\nshow health.angles\nshow health.error",
+                    "channel": "control",
+                    "to": "repair"
+                },
+                "title": "Repair, step by step"
+            },
+            {
+                "id": "arm_model",
+                "type": "ws-xarm-6-model",
+                "x": 0,
+                "y": 520,
+                "params": {
+                    "detail": 1
+                },
+                "title": "xArm 6 model"
+            },
+            {
+                "id": "twin",
+                "type": "viewer-3d",
+                "x": 760,
+                "y": 300,
+                "params": {
+                    "environment": "studio",
+                    "quality": "high",
+                    "grid": true,
+                    "trails": false
+                },
+                "title": "The arm as it reads now"
+            },
+            {
+                "id": "joints",
+                "type": "chart",
+                "x": 380,
+                "y": 620,
+                "params": {
+                    "kind": "line",
+                    "y": "j1,j2,j3,j4,j5,j6",
+                    "channel": "joints",
+                    "last": 600,
+                    "title": "Joints (degrees)"
+                },
+                "title": "Joints"
+            }
+        ],
+        "edges": [
+            {
+                "id": "repair.telemetry>tel.from",
+                "from": {
+                    "node": "repair",
+                    "port": "telemetry"
+                },
+                "to": {
+                    "node": "tel",
+                    "port": "from"
+                }
+            },
+            {
+                "id": "tel.stream>controls.data",
+                "from": {
+                    "node": "tel",
+                    "port": "stream"
+                },
+                "to": {
+                    "node": "controls",
+                    "port": "data"
+                }
+            },
+            {
+                "id": "tel.stream>twin.scene",
+                "from": {
+                    "node": "tel",
+                    "port": "stream"
+                },
+                "to": {
+                    "node": "twin",
+                    "port": "scene"
+                }
+            },
+            {
+                "id": "arm_model.model>twin.scene",
+                "from": {
+                    "node": "arm_model",
+                    "port": "model"
+                },
+                "to": {
+                    "node": "twin",
+                    "port": "scene"
+                }
+            },
+            {
+                "id": "repair.telemetry>joints.data",
+                "from": {
+                    "node": "repair",
+                    "port": "telemetry"
+                },
+                "to": {
+                    "node": "joints",
+                    "port": "data"
+                }
+            }
+        ],
+        "notes": [],
+        "dash": {
+            "items": []
+        }
+    }
+}

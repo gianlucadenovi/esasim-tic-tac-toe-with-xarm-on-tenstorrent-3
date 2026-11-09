@@ -16,6 +16,12 @@
             "nodes": 7
         },
         {
+            "name": "0b · Repair a joint (encoder error, zero)",
+            "file": "blueprints/0b-repair-a-joint-encoder-error-zero.json",
+            "published_version": 1,
+            "nodes": 6
+        },
+        {
             "name": "1 · Print the board",
             "file": "blueprints/1-print-the-board.json",
             "published_version": 0,
@@ -56,6 +62,11 @@
             "id": "ws-xarm-6-model",
             "version": 1,
             "name": "xArm 6 model"
+        },
+        {
+            "id": "ws-xarm-joint-repair",
+            "version": 1,
+            "name": "xArm joint repair"
         },
         {
             "id": "ws-board-sheet",
