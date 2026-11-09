@@ -14,7 +14,7 @@
 
 ## Flows
 
-- **0 · Robot test (online, joint by joint)**: Checks that the xArm answers and is healthy, then moves it one joint at a time, slowly, from the View: J1 − … J6 +, Back to start, Stop.
+- **0 · Play in simulation, the real arm following**: Checks that the xArm answers and is healthy, then moves it one joint at a time, slowly, from the View: J1 − … J6 +, Back to start, Stop.
 - **0b · Repair a joint (encoder error, zero)**: UFACTORY's procedure for a joint's S17/S18 encoder error and its zero, step by step with buttons, for an arm without Studio's Joint debug page. Starts in rehearsal: set Robot to real xArm when ready.
 - **1 · Print the board**: The A4 sheet with the four markers the camera finds the board by. Print it at 100%.
 - **2 · Train the board reader (simulation + rendered cells)**: Synthetic cells into the cells-synthetic dataset, then a CNN that reads empty, X or O, trained on the accelerator; the model goes to the models dataset.
@@ -27,7 +27,7 @@
 
 - A machine with the EsaSim worker (Project > Compute); it runs on any machine, faster with: NVIDIA GPU, Tenstorrent.
 - Data it reads: the dataset **models** of the workspace, read by *models (reader.pt, player.pt)*.
-- Python packages, installed by the worker the first time: `numpy`, `xarm-python-sdk`, `opencv-python-headless>=4.7`, `pillow`, `torch`.
+- Python packages, installed by the worker the first time: `numpy`, `opencv-python-headless>=4.7`, `torch`, `xarm-python-sdk`, `pillow`.
 
 ## How to run it
 
@@ -37,7 +37,7 @@
 
 ## What you get
 
-- On the **View** page: *Arm data for the views* (0b · Repair a joint (encoder error, zero)), *Move the arm* (0 · Robot test (online, joint by joint)), *The arm as it is now* (0 · Robot test (online, joint by joint)), *Arm health (error, warning, state, hottest joint °C)* (0 · Robot test (online, joint by joint)), *Joints* (0b · Repair a joint (encoder error, zero)), *Repair, step by step* (0b · Repair a joint (encoder error, zero)), *The arm as it reads now* (0b · Repair a joint (encoder error, zero)), *The sheet* (1 · Print the board), *The simulated camera* (2 · Train the board reader (simulation + rendered cells)), *Cells cut from the simulated pictures* (2 · Train the board reader (simulation + rendered cells)), *Simulation* (2 · Train the board reader (simulation + rendered cells)), *Rendered cells as they are made* (2 · Train the board reader (simulation + rendered cells)).
+- On the **View** page: *models (reader.pt, player.pt)* (0 · Play in simulation, the real arm following), *Visitor* (0 · Play in simulation, the real arm following), *What the robot says* (0 · Play in simulation, the real arm following), *Robot voice* (0 · Play in simulation, the real arm following), *Camera pictures* (0 · Play in simulation, the real arm following), *The board as the robot reads it* (0 · Play in simulation, the real arm following), *Robot data for the 3D view* (0 · Play in simulation, the real arm following), *xArm 3D view (digital twin)* (0 · Play in simulation, the real arm following), *Thinking* (0 · Play in simulation, the real arm following), *The network's score for each free cell* (0 · Play in simulation, the real arm following), *Reading* (0 · Play in simulation, the real arm following), *How sure the reader is of each cell* (0 · Play in simulation, the real arm following).
 
 ## Data and licences
 
@@ -51,7 +51,7 @@ An [EsaSim](https://esacode.com/) project of the workspace Gianluca De Novi's wo
 
 ### Blueprints in this repository
 
-- [0 · Robot test (online, joint by joint)](blueprints/0-robot-test-online-joint-by-joint.json) · 7 blocks · version 4
+- [0 · Play in simulation, the real arm following](blueprints/0-play-in-simulation-the-real-arm-following.json) · 17 blocks · version 5
 - [0b · Repair a joint (encoder error, zero)](blueprints/0b-repair-a-joint-encoder-error-zero.json) · 6 blocks · version 3
 - [1 · Print the board](blueprints/1-print-the-board.json) · 2 blocks
 - [2 · Train the board reader (simulation + rendered cells)](blueprints/2-train-the-board-reader-simulation-rendered-cells.json) · 14 blocks · version 2
@@ -62,8 +62,8 @@ An [EsaSim](https://esacode.com/) project of the workspace Gianluca De Novi's wo
 
 ### Workspace blocks it uses
 
-- [xArm joint test](blocks/ws-xarm-joint-test) · version 6
 - [xArm model](blocks/ws-xarm-6-model) · version 2
+- [Tic-tac-toe game](blocks/ws-tic-tac-toe-game) · version 7
 - [xArm joint repair](blocks/ws-xarm-joint-repair) · version 5
 - [Step-by-step guide](blocks/ws-step-by-step-guide) · version 2
 - [Board sheet](blocks/ws-board-sheet) · version 2
@@ -72,7 +72,6 @@ An [EsaSim](https://esacode.com/) project of the workspace Gianluca De Novi's wo
 - [Train cell reader](blocks/ws-train-cell-reader) · version 2
 - [Train player by self-play](blocks/ws-train-player-by-self-play) · version 2
 - [Read board](blocks/ws-read-board) · version 2
-- [Tic-tac-toe game](blocks/ws-tic-tac-toe-game) · version 7
 - [xArm teach and repeat](blocks/ws-xarm-teach-and-repeat) · version 2
 
 Keys pasted in blocks (secret settings) are not saved here. Datasets, results and the team stay in EsaSim.

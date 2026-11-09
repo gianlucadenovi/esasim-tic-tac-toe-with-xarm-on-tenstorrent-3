@@ -1,0 +1,461 @@
+{
+    "esasim": {
+        "kind": "blueprint",
+        "flow_id": 9
+    },
+    "name": "0 · Play in simulation, the real arm following",
+    "description": "Checks that the xArm answers and is healthy, then moves it one joint at a time, slowly, from the View: J1 − … J6 +, Back to start, Stop.",
+    "published_version": 5,
+    "updated": "2026-11-09 06:28:11",
+    "graph": {
+        "nodes": [
+            {
+                "id": "models",
+                "type": "dataset",
+                "x": -300,
+                "y": 160,
+                "params": {
+                    "dataset": "9",
+                    "version": "latest",
+                    "pattern": "*.pt"
+                },
+                "title": "models (reader.pt, player.pt)"
+            },
+            {
+                "id": "arm_model",
+                "type": "ws-xarm-6-model",
+                "x": -300,
+                "y": 448,
+                "params": {
+                    "arm": "xArm 6",
+                    "detail": 1
+                },
+                "title": "xArm 6 model"
+            },
+            {
+                "id": "game",
+                "type": "ws-tic-tac-toe-game",
+                "x": 20,
+                "y": 160,
+                "params": {
+                    "robot": "simulation",
+                    "camera": "simulated",
+                    "visitor": "me (Controls)",
+                    "auto_games": 5,
+                    "sim_speed": 1,
+                    "robot_plays": "X",
+                    "player": "learned, checked",
+                    "accelerator": "CPU",
+                    "camera_mount": "table",
+                    "camera_pos": "",
+                    "camera_hfov": 70,
+                    "park": "150, -250, 250",
+                    "draw_grid": true,
+                    "keep_playing": true,
+                    "minutes": 30,
+                    "ip": "192.168.1.216",
+                    "board_x": 390,
+                    "board_y": -70,
+                    "board_rotation": 90,
+                    "board_size": 140,
+                    "table_z": 0,
+                    "pen_length": 100,
+                    "tcp": "flange",
+                    "z_draw": 100,
+                    "z_up": 130,
+                    "roll": 180,
+                    "speed": 80,
+                    "accel": 400,
+                    "joint_speed": 30,
+                    "joint_accel": 80,
+                    "safe_box": "100,600, -350,350, 20,450"
+                },
+                "title": "Tic-tac-toe game"
+            },
+            {
+                "id": "controls",
+                "type": "controls-view",
+                "x": 896,
+                "y": -300,
+                "params": {
+                    "controls": "show say.text\nswitch Real arm\ngrid cell 3x3 board.matrix 1=X -1=O\nbutton New game\nbutton Stop\nbutton Your move",
+                    "channel": "control",
+                    "to": "game"
+                },
+                "title": "Visitor"
+            },
+            {
+                "id": "talk",
+                "type": "telemetry",
+                "x": 420,
+                "y": -300,
+                "params": {
+                    "interval": 0.5,
+                    "channels": "say,board,result,check,mirror"
+                },
+                "title": "What the robot says"
+            },
+            {
+                "id": "speak",
+                "type": "speak-view",
+                "x": 896,
+                "y": 6,
+                "params": {
+                    "channel": "say",
+                    "field": "text",
+                    "voice": "en",
+                    "rate": 1
+                },
+                "title": "Robot voice"
+            },
+            {
+                "id": "cam_tel",
+                "type": "telemetry",
+                "x": 648,
+                "y": -144,
+                "params": {
+                    "interval": 0.5,
+                    "channels": "camera"
+                },
+                "title": "Camera pictures"
+            },
+            {
+                "id": "camera",
+                "type": "image-view",
+                "x": 1164,
+                "y": -144,
+                "params": {
+                    "size": "large"
+                },
+                "title": "The board as the robot reads it"
+            },
+            {
+                "id": "twin_tel",
+                "type": "telemetry",
+                "x": 432,
+                "y": 1320,
+                "params": {
+                    "interval": 0.3,
+                    "channels": "joints,twin,twin_check,scene,paper",
+                    "keep": 20000
+                },
+                "title": "Robot data for the 3D view"
+            },
+            {
+                "id": "twin",
+                "type": "viewer-3d",
+                "x": 906,
+                "y": 1296,
+                "params": {
+                    "environment": "studio",
+                    "quality": "high",
+                    "grid": true,
+                    "trails": false
+                },
+                "title": "xArm 3D view (digital twin)"
+            },
+            {
+                "id": "think_tel",
+                "type": "telemetry",
+                "x": 668,
+                "y": 180,
+                "params": {
+                    "interval": 0.5,
+                    "channels": "thinking"
+                },
+                "title": "Thinking"
+            },
+            {
+                "id": "thinking",
+                "type": "heatmap-view",
+                "x": 1200,
+                "y": 180,
+                "params": {
+                    "field": "matrix",
+                    "colormap": "coolwarm",
+                    "min": "-1",
+                    "max": "1",
+                    "values": true
+                },
+                "title": "The network's score for each free cell"
+            },
+            {
+                "id": "read_tel",
+                "type": "telemetry",
+                "x": 916,
+                "y": 380,
+                "params": {
+                    "interval": 0.5,
+                    "channels": "read"
+                },
+                "title": "Reading"
+            },
+            {
+                "id": "read",
+                "type": "heatmap-view",
+                "x": 1468,
+                "y": 380,
+                "params": {
+                    "field": "matrix",
+                    "colormap": "viridis",
+                    "min": "0",
+                    "max": "1",
+                    "values": true
+                },
+                "title": "How sure the reader is of each cell"
+            },
+            {
+                "id": "score",
+                "type": "gauge-view",
+                "x": 680,
+                "y": 1040,
+                "params": {
+                    "fields": "result.robot_wins,result.draws,result.visitor_wins,reading.accuracy",
+                    "style": "number",
+                    "decimals": 2
+                },
+                "title": "Score and reading accuracy"
+            },
+            {
+                "id": "joints",
+                "type": "chart",
+                "x": 1200,
+                "y": 554,
+                "params": {
+                    "kind": "line",
+                    "y": "j1,j2,j3,j4,j5,j6",
+                    "channel": "joints",
+                    "last": 600,
+                    "title": "Joints (degrees)"
+                },
+                "title": "Joints"
+            },
+            {
+                "id": "pose",
+                "type": "chart",
+                "x": 948,
+                "y": 920,
+                "params": {
+                    "kind": "line",
+                    "y": "x,y,z",
+                    "channel": "pose",
+                    "last": 600,
+                    "title": "x, y, z (mm)"
+                },
+                "title": "Pen position"
+            }
+        ],
+        "edges": [
+            {
+                "id": "models.files>game.models",
+                "from": {
+                    "node": "models",
+                    "port": "files"
+                },
+                "to": {
+                    "node": "game",
+                    "port": "models"
+                }
+            },
+            {
+                "id": "arm_model.model>game.robot",
+                "from": {
+                    "node": "arm_model",
+                    "port": "model"
+                },
+                "to": {
+                    "node": "game",
+                    "port": "robot"
+                }
+            },
+            {
+                "id": "arm_model.model>twin.scene",
+                "from": {
+                    "node": "arm_model",
+                    "port": "model"
+                },
+                "to": {
+                    "node": "twin",
+                    "port": "scene"
+                }
+            },
+            {
+                "id": "game.telemetry>talk.from",
+                "from": {
+                    "node": "game",
+                    "port": "telemetry"
+                },
+                "to": {
+                    "node": "talk",
+                    "port": "from"
+                }
+            },
+            {
+                "id": "talk.stream>controls.data",
+                "from": {
+                    "node": "talk",
+                    "port": "stream"
+                },
+                "to": {
+                    "node": "controls",
+                    "port": "data"
+                }
+            },
+            {
+                "id": "game.telemetry>speak.data",
+                "from": {
+                    "node": "game",
+                    "port": "telemetry"
+                },
+                "to": {
+                    "node": "speak",
+                    "port": "data"
+                }
+            },
+            {
+                "id": "game.telemetry>cam_tel.from",
+                "from": {
+                    "node": "game",
+                    "port": "telemetry"
+                },
+                "to": {
+                    "node": "cam_tel",
+                    "port": "from"
+                }
+            },
+            {
+                "id": "cam_tel.stream>camera.images",
+                "from": {
+                    "node": "cam_tel",
+                    "port": "stream"
+                },
+                "to": {
+                    "node": "camera",
+                    "port": "images"
+                }
+            },
+            {
+                "id": "game.telemetry>twin_tel.from",
+                "from": {
+                    "node": "game",
+                    "port": "telemetry"
+                },
+                "to": {
+                    "node": "twin_tel",
+                    "port": "from"
+                }
+            },
+            {
+                "id": "twin_tel.stream>twin.scene",
+                "from": {
+                    "node": "twin_tel",
+                    "port": "stream"
+                },
+                "to": {
+                    "node": "twin",
+                    "port": "scene"
+                }
+            },
+            {
+                "id": "game.telemetry>think_tel.from",
+                "from": {
+                    "node": "game",
+                    "port": "telemetry"
+                },
+                "to": {
+                    "node": "think_tel",
+                    "port": "from"
+                }
+            },
+            {
+                "id": "think_tel.stream>thinking.data",
+                "from": {
+                    "node": "think_tel",
+                    "port": "stream"
+                },
+                "to": {
+                    "node": "thinking",
+                    "port": "data"
+                }
+            },
+            {
+                "id": "game.telemetry>read_tel.from",
+                "from": {
+                    "node": "game",
+                    "port": "telemetry"
+                },
+                "to": {
+                    "node": "read_tel",
+                    "port": "from"
+                }
+            },
+            {
+                "id": "read_tel.stream>read.data",
+                "from": {
+                    "node": "read_tel",
+                    "port": "stream"
+                },
+                "to": {
+                    "node": "read",
+                    "port": "data"
+                }
+            },
+            {
+                "id": "game.telemetry>score.data",
+                "from": {
+                    "node": "game",
+                    "port": "telemetry"
+                },
+                "to": {
+                    "node": "score",
+                    "port": "data"
+                }
+            },
+            {
+                "id": "game.telemetry>joints.data",
+                "from": {
+                    "node": "game",
+                    "port": "telemetry"
+                },
+                "to": {
+                    "node": "joints",
+                    "port": "data"
+                }
+            },
+            {
+                "id": "game.telemetry>pose.data",
+                "from": {
+                    "node": "game",
+                    "port": "telemetry"
+                },
+                "to": {
+                    "node": "pose",
+                    "port": "data"
+                }
+            }
+        ],
+        "notes": [],
+        "dash": {
+            "items": {
+                "controls": {
+                    "x": 7,
+                    "y": 0,
+                    "w": 5,
+                    "h": 12
+                },
+                "twin": {
+                    "x": 0,
+                    "y": 0,
+                    "w": 7,
+                    "h": 18
+                },
+                "joints": {
+                    "x": 7,
+                    "y": 12,
+                    "w": 5,
+                    "h": 6
+                }
+            }
+        }
+    }
+}
