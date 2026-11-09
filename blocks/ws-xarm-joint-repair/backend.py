@@ -1,6 +1,6 @@
 # ── EsaSim block ──────────────────────────────────────────────────────
-# xArm joint repair (ws-xarm-joint-repair) · version 1 · machine block, Python: def run(ctx)
-# UFACTORY's procedure for a joint's encoder error (S17, S18) and for setting a joint's zero again, step by step from the Controls view, without Studio's Joint debug page.
+# xArm joint repair (ws-xarm-joint-repair) · version 2 · machine block, Python: def run(ctx)
+# A wizard for UFACTORY's joint-encoder repair (S17, S18) and zero reset: one instruction at a time, a ✓ or ✗ after each, then the next step.
 # Workspace: Gianluca De Novi's workspace · Author: Gianluca De Novi
 # Saved: 2026-11-09
 #
@@ -12,7 +12,7 @@
 # Settings ctx.params["key"]
 #   robot       select    Robot = "rehearsal" of rehearsal | real xArm
 #   ip          text      Arm IP address = "192.168.1.200"
-#   rehearsal_joint number    Joint with the error (rehearsal) = 5
+#   rehearsal_joint number    Joint with the error (rehearsal) = 1
 #   minutes     number    Longest session (minutes) = 60
 #   channel     text      Controls channel = "control"
 # Runs on  Any machine. Return a dict to fill the "result" output.
@@ -20,26 +20,29 @@
 # EsaSim rewrites these lines from the block's definition each time it is saved: change the definition, not them.
 # ── end of EsaSim block header ────────────────────────────────────────
 
-"""xArm joint repair: UFACTORY's procedure for a joint's encoder error (S17 single-turn, S18 multi-turn) and for
-setting a joint's zero again, one step at a time from the Controls view, for arms whose UFACTORY Studio has no
-Joint debug page (Studio before 2.4.0). It sends the same commands as that page, through the xArm SDK:
+"""xArm joint repair, as a wizard: one instruction at a time in the Controls view; you do it, press the button the
+instruction names, the block checks what it can on the arm, says whether it worked (✓ / ✗), and shows the next step.
 
-    H101 D0813 V2   I<joint>   clear the single-turn encoder error (S17)      set_servo_addr_16(j, 0x0813, 2)
-    H101 D0813 V256 I<joint>   clear the multi-turn encoder error (S18)       set_servo_addr_16(j, 0x0813, 256)
-    H101 D0104 V1   I<joint>   unlock the joint, to turn it by hand           set_servo_addr_16(j, 0x0104, 1)
-    D13 I<joint>               set the joint's present position as 0°        set_servo_zero(j)
+It follows UFACTORY's procedure for a joint's encoder error (S17 single-turn, S18 multi-turn) and for setting a
+joint's zero again, for arms whose UFACTORY Studio has no Joint debug page (Studio before 2.4.0). The commands are
+those of that page, sent through the xArm SDK:
 
-Every command that changes the arm is sent only on a second press of its button within 15 seconds, and is written
-to the log with the arm's answer. Robot = rehearsal sends nothing: a pretend arm with an S17 error on the chosen
-joint answers instead, to learn the steps."""
+    H101 D0813 V2   I<joint>   clear the encoder error (as UFACTORY support wrote)   set_servo_addr_16(j, 0x0813, 2)
+    H101 D0813 V256 I<joint>   clear the multi-turn error (UFACTORY's S18 article)    set_servo_addr_16(j, 0x0813, 256)
+    H101 D0104 V1   I<joint>   unlock the joint, to turn it by hand                  set_servo_addr_16(j, 0x0104, 1)
+    D13 I<joint>               the joint's present position becomes 0°              set_servo_zero(j)
+
+A command is sent only from the step that shows it, with the button Send this command; every command and the arm's
+answer go to joint_repair.csv. Robot = rehearsal sends nothing: a pretend xArm 7 with an S18 error answers."""
 import csv
 import signal
 import time
 
 ENCODER_REG = 0x0813
 UNLOCK_REG = 0x0104
-CONFIRM_S = 15.0
-CARRIES_ARM = (2, 3)    # joints that hold the arm up: unlocked, the arm falls
+
+BUTTONS = {"done, next": "done", "send this command": "send", "yes": "yes", "no": "no",
+           "back": "back", "start over": "restart", "finish": "finish"}
 
 
 class Stop(Exception):
@@ -47,15 +50,15 @@ class Stop(Exception):
 
 
 class Rehearsal:
-    """A pretend xArm 6 with an S17 error on one joint, answering like the SDK; nothing is sent anywhere."""
+    """A pretend xArm 7 with an S18 error (status 1) on one joint, answering like the SDK; nothing is sent anywhere."""
 
     def __init__(self, joint):
-        self.connected, self.axis, self.version, self.sn = True, 6, "rehearsal (no arm)", "-"
-        self.state, self.mode, self.warn_code = 4, 0, 0
-        self.q = [0.0, -20.0, -30.0, 0.0, 47.0, 0.0]
-        self.bad, self.code, self.unlocked, self.estop_needed = joint, 17, None, False
-        self.error_code = 10  # C10..C17: a joint reports an error
-        self.zero_offset = 0.0
+        self.connected, self.axis, self.version, self.sn = True, 7, "rehearsal (no arm)", "-"
+        self.state, self.mode, self.warn_code, self.error_code = 4, 0, 0, 11
+        self.true_q = [12.0, 0.0, 0.0, 30.0, 0.0, 20.0, 0.0]
+        self.offset = [0.0] * 7
+        self.bad, self.code, self.status, self.unlocked, self.cleared = joint, 18, 1, None, False
+        self.offset[joint - 1] = 7.5  # the zero moved: the case where it must be set again
 
     def connect(self):
         self.connected = True
@@ -64,29 +67,36 @@ class Rehearsal:
         self.connected = False
 
     def get_servo_angle(self, is_radian=False):
-        if self.unlocked:  # someone turns it by hand towards zero
+        if self.error_code:
+            return 0, [0.0] * 7  # in error the controller gives no angles
+        if self.unlocked:  # someone turns it by hand towards its true zero
             j = self.unlocked - 1
-            self.q[j] += max(-4.0, min(4.0, -self.q[j] * 0.3)) + 0.0
-        return 0, list(self.q)
+            self.true_q[j] += max(-3.0, min(3.0, -self.true_q[j] * 0.4))
+        return 0, [a + o for a, o in zip(self.true_q, self.offset)]
 
     def get_servo_debug_msg(self):
         out = []
         for i in range(1, 8):
-            c = self.code if i == self.bad else 0
-            out.append({"servo_id": i, "status": 0, "code": c, "title": {17: "Single-turn encoder error", 18: "Multi-turn encoder error"}.get(c, "Normal"), "desc": ""})
+            bad = i == self.bad and self.code
+            out.append({"servo_id": i, "status": self.status if bad else 0, "code": self.code if bad else 0,
+                        "title": "Multi-turn Encoder Error" if bad else "Normal", "desc": ""})
         return 0, out
 
     def set_servo_addr_16(self, servo_id=None, addr=None, value=None):
-        if addr == ENCODER_REG and servo_id == self.bad and value in (2, 256):
-            self.code = 0
-            self.q[servo_id - 1] += 3.6  # the zero moved a little: the case where it must be set again
+        if addr == ENCODER_REG and servo_id == self.bad:
+            self.cleared = True
         if addr == UNLOCK_REG and value == 1:
             self.unlocked = servo_id
         return 0
 
     def set_servo_zero(self, servo_id=None):
-        self.q[servo_id - 1] = 0.0
+        self.offset[servo_id - 1] = -self.true_q[servo_id - 1]
         return 0
+
+    def estop(self):
+        self.unlocked = None
+        if self.cleared:
+            self.code, self.cleared = 0, False
 
     def clean_error(self):
         if not self.code:
@@ -97,18 +107,14 @@ class Rehearsal:
         return 0
 
     def motion_enable(self, enable=True):
-        self.unlocked = None
         return 0
 
     def set_mode(self, m):
         return 0
 
     def set_state(self, state=0):
-        self.state = 0 if not self.error_code else 4
+        self.state = 4 if self.error_code else 0
         return 0
-
-    def estop(self):
-        self.unlocked = None
 
 
 def run(ctx):
@@ -117,7 +123,7 @@ def run(ctx):
     channel = str(p.get("channel") or "control")
     deadline = time.time() + float(p.get("minutes", 60)) * 60
     log = csv.writer(open(ctx.output("log", "joint_repair.csv"), "w", newline=""))
-    log.writerow(["time", "step", "joint", "command", "sdk call", "answer", "error", "servo codes", "joint angles"])
+    log.writerow(["time", "step", "joint", "action", "sdk call", "answer", "controller error", "joint errors", "joint angles"])
 
     def interrupted(*_):
         raise KeyboardInterrupt()
@@ -126,23 +132,22 @@ def run(ctx):
     except (ValueError, OSError):
         pass
 
-    S = {"joint": None, "chosen": None, "pending": None, "step": "check", "before": None, "after": None, "clear": "S17-single-turn"}
+    W = {"step": None, "history": [], "joint": None, "chosen": None, "value": 2, "last": "", "info": {}}
 
     # -- the arm -----------------------------------------------------------------------------------------------
     if rehearsal:
-        api = Rehearsal(int(p.get("rehearsal_joint", 5) or 5))
-        ctx.log("Rehearsal: nothing is sent to any arm. A pretend arm with an S17 error on joint %d answers." % api.bad)
+        api = Rehearsal(int(p.get("rehearsal_joint", 1) or 1))
+        ctx.log("Rehearsal: nothing is sent to any arm. A pretend xArm 7 with an S18 error on joint %d answers." % api.bad)
     else:
         from xarm.wrapper import XArmAPI
         ip = str(p.get("ip") or "").strip()
-        ctx.telemetry("guide", {"step": "Connecting", "text": "Connecting to the xArm at %s…" % ip})
+        ctx.telemetry("guide", {"step": "Connecting", "text": "Connecting to the xArm at %s…" % ip, "press": "Wait"})
         try:
             api = XArmAPI(ip, is_radian=False)
         except Exception as e:
-            raise RuntimeError("The arm at %s did not accept the connection (%s). Close UFACTORY Studio's page and any other program connected to it, and run again." % (ip, e))
+            raise RuntimeError("The arm at %s did not accept the connection (%s)." % (ip, e))
         if not api.connected:
-            raise RuntimeError("Cannot reach the xArm at %s: check the controller is on, the address, and that this machine is on the arm's network (ping %s). "
-                               "Flow 0 (Robot test) says in detail what is missing." % (ip, ip))
+            raise RuntimeError("Cannot reach the xArm at %s: check the controller is on, the address, and that this machine is on the arm's network (ping %s)." % (ip, ip))
 
     def axes():
         try:
@@ -150,13 +155,19 @@ def run(ctx):
         except Exception:
             return 6
 
-    def ensure():
-        if not api.connected:
+    def carries():
+        """Joints that hold the arm up: unlocked, the arm falls."""
+        return (2, 4) if axes() == 7 else (2, 3)
+
+    def ensure(tries=1):
+        for _ in range(tries):
+            if api.connected:
+                return True
             try:
                 api.connect()
-                time.sleep(1.0)
             except Exception:
                 pass
+            time.sleep(1.0)
         return api.connected
 
     def angles():
@@ -169,174 +180,158 @@ def run(ctx):
         return None
 
     def servo():
-        """[(joint, code, title)] of the joints that report an error."""
+        """[(joint, code, status, title)] of the joints that report an error; None if they cannot be read."""
         try:
             code, msgs = api.get_servo_debug_msg()
         except Exception as e:
             ctx.log("The joints' error codes could not be read (%s)." % e)
+            return None
+        if code != 0 and not msgs:
             return None
         out = []
         for m in msgs or []:
             sid = int(m.get("servo_id", 9))
             if sid <= axes() and m.get("code"):
                 t = m.get("title")
-                out.append((sid, int(m["code"]), str(t.get("en") if isinstance(t, dict) else t or "").strip()))
+                out.append((sid, int(m["code"]), int(m.get("status") or 0), str(t.get("en") if isinstance(t, dict) else t or "").strip()))
         return out
 
     def snapshot():
         q, bad = angles(), servo()
-        h = {"connected": bool(api.connected), "state": getattr(api, "state", None), "error": getattr(api, "error_code", None), "warning": getattr(api, "warn_code", None)}
+        err = getattr(api, "error_code", None)
+        h = {"connected": "yes" if api.connected else "NO", "error": ("C%s" % err) if err else "none",
+             "servo": "; ".join("J%d S%d (status %d) %s" % b for b in bad) if bad else ("none" if bad is not None else "unknown")}
         if q:
             ctx.telemetry("joints", {"j%d" % (i + 1): round(v, 2) for i, v in enumerate(q)})
             h["angles"] = "   ".join("J%d %+.1f°" % (i + 1, v) for i, v in enumerate(q))
-        h["servo"] = "; ".join("J%d S%d %s" % b for b in bad) if bad else ("none" if bad is not None else "unknown")
+            if err and not any(abs(v) > 1e-6 for v in q):
+                h["angles"] += "   (the arm gives no angles while it is in error)"
         ctx.telemetry("health", h)
-        return q, bad, h
+        return q, bad, err, h
 
     def joint():
-        return S["chosen"] or S["joint"]
+        return W["chosen"] or W["joint"]
 
-    def record(command, call, answer):
-        q, bad, h = snapshot()
-        log.writerow([time.strftime("%Y-%m-%d %H:%M:%S"), S["step"], joint(), command, call, answer, h.get("error"), h.get("servo"), h.get("angles", "")])
+    def record(action, call, answer):
+        q, bad, err, h = snapshot()
+        log.writerow([time.strftime("%Y-%m-%d %H:%M:%S"), W["step"], joint(), action, call, answer, h["error"], h["servo"], h.get("angles", "")])
 
-    def guide(step, text):
-        S["step"] = step
+    def command():
+        return "H101 D0813 V%d I%d" % (W["value"], joint() or 0)
+
+    def reading():
+        q, bad, err, h = snapshot()
         j = joint()
-        ctx.telemetry("guide", {"step": step, "text": text, "joint": ("J%d" % j) if j else "not chosen"})
-        ctx.log("[%s] %s" % (step, text))
-
-    def confirm(action, what):
-        """True on the second press of the same action within CONFIRM_S seconds."""
-        now = time.time()
-        pend = S["pending"]
-        if pend and pend[0] == action and pend[1] == joint() and now - pend[2] <= CONFIRM_S:
-            S["pending"] = None
-            return True
-        S["pending"] = (action, joint(), now)
-        ctx.telemetry("guide", {"step": S["step"], "joint": "J%d" % joint(),
-                                "text": "To send %s, press the same button again within %d seconds. Nothing has been sent yet." % (what, CONFIRM_S)})
-        return False
-
-    def reading(j, q):
-        return ("%+.1f°" % q[j - 1]) if q and 0 < j <= len(q) else "unknown"
-
-    # -- step 1: what the arm says -------------------------------------------------------------------------------
-    def check(first=False):
-        q, bad, h = snapshot()
-        if first:
-            S["before"] = q
-            ctx.log("Arm: firmware %s, serial %s, %s joints." % (getattr(api, "version", "?"), getattr(api, "sn", "?"), axes()))
-            ctx.log("Joint angles now: %s" % h.get("angles", "unknown"))
-        if bad:
-            S["joint"] = bad[0][0]
-            if bad[0][1] == 18:
-                S["clear"] = "S18-multi-turn"
-        if bad is None:
-            guide("1 · Check", "The joints' error codes could not be read. Choose the joint UFACTORY told you about in Joint, then go on.")
-            return
-        if not bad:
-            msg = "No joint reports an error%s." % ("" if not h.get("error") else (" (the arm reports C%s: press Clear the arm's error)" % h["error"]))
-            guide("1 · Check", msg + " To set a joint's zero anyway, choose it in Joint and go to step 4 (Unlock the joint).")
-            return
-        j, code, title = bad[0]
-        more = (" Other joints too: " + ", ".join("J%d S%d" % (b[0], b[1]) for b in bad[1:]) + ": repair one at a time.") if len(bad) > 1 else ""
-        guide("1 · Check",
-              "Joint %d reports S%d (%s); it reads %s now.%s Before anything: put a strip of tape across joint %d and draw a line over both halves, "
-              "and photograph the arm: the repair can lose the joint's zero, and this is where you can see it. "
-              "Then press Clear the encoder error (twice); it sends H101 D0813 V%d (Clear: %s)." % (j, code, title or "joint error", reading(j, q), more, j, 256 if "18" in S["clear"] else 2, S["clear"]))
-
-    def clear_encoder():
-        j = joint()
-        if not j:
-            guide(S["step"], "Choose the joint first (Joint).")
-            return
-        value = 256 if "18" in S["clear"] else 2
-        cmd = "H101 D0813 V%d I%d" % (value, j)
-        if not confirm("clear", cmd):
-            return
-        ensure()
-        code = api.set_servo_addr_16(servo_id=j, addr=ENCODER_REG, value=value)
-        record(cmd, "set_servo_addr_16(%d, 0x0813, %d)" % (j, value), code)
-        if code != 0:
-            guide("2 · Clear the encoder error", "The arm answered code %s to %s: it did not take it. Write the code to UFACTORY (support@ufactory.cc) with the log." % (code, cmd))
-            return
-        S["after"] = "clear"
-        guide("3 · E-stop", "Sent %s; the arm answered 0 (accepted). Now press the red E-stop, wait 10 seconds, release it, then press I pressed and released the E-stop." % cmd)
-
-    def unlock():
-        j = joint()
-        if not j:
-            guide(S["step"], "Choose the joint first (Joint).")
-            return
-        cmd = "H101 D0104 V1 I%d" % j
-        what = cmd + (" — joint %d holds the arm up: when it is unlocked the arm FALLS unless someone holds it" % j if j in CARRIES_ARM else "")
-        if not confirm("unlock", what):
-            return
-        ensure()
-        code = api.set_servo_addr_16(servo_id=j, addr=UNLOCK_REG, value=1)
-        record(cmd, "set_servo_addr_16(%d, 0x0104, 1)" % j, code)
-        if code != 0:
-            guide("4 · Unlock", "The arm answered code %s to %s: the joint may still be locked; do not force it." % (code, cmd))
-            return
-        S["after"] = "unlock"
-        guide("4 · Turn it to zero",
-              "Joint %d is unlocked. Turn it slowly by hand to its zero: the position it has in the arm's zero pose (all joints 0°), the way it was before "
-              "the error. The reading (live, under Arm) is %s; if the zero was not lost, it reads 0.0° there. Hold it there and press the E-stop, "
-              "wait 10 seconds, release it, then press I pressed and released the E-stop." % (j, reading(j, angles())))
-
-    def set_zero():
-        j = joint()
-        if not j:
-            guide(S["step"], "Choose the joint first (Joint).")
-            return
-        cmd = "D13 I%d" % j
-        if not confirm("zero", cmd + " (the present position of joint %d becomes 0°)" % j):
-            return
-        ensure()
-        code = api.set_servo_zero(servo_id=j)
-        record(cmd, "set_servo_zero(%d)" % j, code)
-        if code != 0:
-            guide("5 · Set the zero", "The arm answered code %s to %s: it did not take it." % (code, cmd))
-            return
-        S["after"] = "zero"
-        guide("6 · E-stop", "Sent %s; the arm answered 0. Press the E-stop, wait 10 seconds, release it, then press I pressed and released the E-stop: "
-                            "the new zero takes effect." % cmd)
+        if not q or not j or j > len(q) or (err and not any(abs(v) > 1e-6 for v in q)):
+            return None
+        return q[j - 1]
 
     def after_estop():
+        """After the E-stop: wait for the arm to answer again and read it."""
         if rehearsal:
             api.estop()
-        for _ in range(10):
-            if ensure():
-                break
-            time.sleep(1.0)
-        time.sleep(1.0)
-        q, bad, h = snapshot()
-        j = joint()
-        before = reading(j, S["before"]) if j else "?"
-        now = reading(j, q) if j else "?"
-        still = [b for b in (bad or []) if b[0] == j]
-        record("E-stop pressed and released", "-", "-")
-        if S["after"] == "clear":
-            if still:
-                guide("3 · E-stop", "Joint %d still reports S%d. Press the E-stop once more for 10 seconds; if it stays, choose Clear: S18-multi-turn "
-                                   "if the code is S18, else write to UFACTORY with the log." % (j, still[0][1]))
-                return
-            guide("4 · Is the zero still right?",
-                  "Joint %d reports no error now. It read %s before the repair and reads %s now, with the joint where it was. "
-                  "If the line on your tape still matches and the two readings agree (within a degree), the zero is fine: press Clear the arm's error, then Finish. "
-                  "If not, the zero must be set again: someone holds the arm%s, then press Unlock the joint (twice)." % (j, before, now, " (joint %d carries it)" % j if j in CARRIES_ARM else ""))
-        elif S["after"] == "unlock":
-            guide("5 · Set the zero", "Joint %d is locked again at %s. If it is at its zero, press Set this position as zero (twice); if not, unlock it again." % (j, now))
-        elif S["after"] == "zero":
-            guide("7 · Check", "Joint %d now reads %s (0.0° expected). Press Clear the arm's error; then check in UFACTORY Studio that the arm moves to its zero pose "
-                              "and the joint's line matches." % (j, now))
-        else:
-            guide(S["step"], "Read again: joint %s reads %s; errors: %s." % (j, now, h.get("servo")))
-        S["after"] = None
+        ok = ensure(tries=15)
+        time.sleep(2.0)
+        record("E-stop pressed and released (as you said)", "-", "connected" if ok else "not connected")
+        return ok
 
-    def clear_arm_error():
-        ensure()
+    def estop_text(why):
+        return ("1. Press the red E-stop button on the control box. It stays down.\n"
+                "2. Wait 10 seconds.\n"
+                "3. Turn the button in the direction of its arrows until it pops back up.\n"
+                "%s\nThen press Done, next." % why)
+
+    # -- the steps: (title, text, buttons it takes) and what each button does ------------------------------------
+    def step_read():
+        q, bad, err, h = snapshot()
+        W["info"] = {"bad": bad, "err": err}
+        if bad:
+            j, code, status, title = bad[0]
+            W["joint"] = j
+            others = (" Other joints report errors too (%s): repair one at a time." % ", ".join("J%d S%d" % (b[0], b[1]) for b in bad[1:])) if len(bad) > 1 else ""
+            return ("Read the arm",
+                    "This is an xArm %d, firmware %s.\nJoint %d reports S%d (%s), status %d; the controller reports %s.%s\n"
+                    "This wizard repairs joint %d. If that is the joint UFACTORY told you about, press Done, next. "
+                    "(Another joint: choose it in Joint first.)" % (axes(), getattr(api, "version", "?"), j, code, title, status, h["error"], others, joint()),
+                    ("done",))
+        if bad is None:
+            return ("Read the arm", "The joints' error codes could not be read. Choose the joint UFACTORY told you about in Joint, then press Done, next.", ("done",))
+        return ("Read the arm", "No joint reports an error (controller error: %s). To set a joint's zero anyway, choose it in Joint, then press Done, next." % h["error"], ("done",))
+
+    def act_read(b):
+        if not joint():
+            W["last"] = "✗ No joint chosen: choose one in Joint."
+            return None
+        bad = W["info"].get("bad") or []
+        if any(x[0] == joint() for x in bad):
+            return "mark"
+        return "clear_arm" if W["info"].get("err") else "zero_ok"
+
+    def step_mark():
+        j = joint()
+        return ("Mark the joint",
+                "1. Put a strip of tape across joint %d so it covers both halves of the joint (the part that turns and the part that does not).\n"
+                "2. Draw one straight line across the tape with a marker.\n"
+                "3. Take a photo of the whole arm.\n"
+                "Later this line shows whether the joint's zero moved. When it is done, press Done, next." % j, ("done",))
+
+    def step_send_clear():
+        j = joint()
+        bad = [x for x in (W["info"].get("bad") or []) if x[0] == j]
+        note = ""
+        if bad and bad[0][1] == 18:
+            note = ("\nNote: joint %d reports S18 (multi-turn), status %d. Minna wrote V2. UFACTORY's article for S18 errors uses V256 instead, "
+                    "and only when the status is 0 or 8 (otherwise it says to contact them). If you are not sure which, ask Minna before sending. "
+                    "Command below chooses V2 or V256." % (j, bad[0][2]))
+        return ("Clear the encoder error",
+                "This sends the command that clears the error of joint %d:\n      %s\n"
+                "Nothing moves. Press Send this command.%s" % (j, command(), note), ("send",))
+
+    def act_send_clear(b):
+        j = joint()
+        ensure(3)
+        code = api.set_servo_addr_16(servo_id=j, addr=ENCODER_REG, value=W["value"])
+        record(command(), "set_servo_addr_16(%d, 0x0813, %d)" % (j, W["value"]), code)
+        if code != 0:
+            W["last"] = "✗ Sent %s: the arm answered code %s, it did not take it. Press Send this command to try again, or Finish and write to UFACTORY." % (command(), code)
+            return None
+        W["last"] = "✓ Sent %s: the arm accepted it (answer 0)." % command()
+        return "estop1"
+
+    def step_estop1():
+        return ("E-stop, so the command takes effect", estop_text("(The arm loses power for a moment; it stays where it is.)"), ("done",))
+
+    def act_estop1(b):
+        if not after_estop():
+            W["last"] = "✗ The arm does not answer yet. Check that the E-stop is released (popped up), wait 10 seconds and press Done, next again."
+            return None
+        q, bad, err, h = snapshot()
+        still = [x for x in (bad or []) if x[0] == joint()]
+        if still:
+            W["last"] = "✗ Joint %d still reports S%d (status %d)." % (joint(), still[0][1], still[0][2])
+            return "retry"
+        W["last"] = "✓ Joint %d no longer reports an error." % joint()
+        return "clear_arm"
+
+    def step_retry():
+        return ("The error is still there",
+                "What you can do:\n"
+                "• Press Back to send the command again (you can change Command to V2 or V256 first), then the E-stop again.\n"
+                "• Or press Finish and write to UFACTORY (support@ufactory.cc): the file joint_repair.csv in Results has every command and the arm's answers.",
+                ("back", "finish"))
+
+    def step_clear_arm():
+        err = snapshot()[3]["error"]
+        if err != "none":
+            return ("Clear the arm's error",
+                    "The controller still remembers the error (%s). This clears it and turns the motors on, like Clear Error in UFACTORY Studio. "
+                    "Nothing moves. Press Send this command." % err, ("send",))
+        return ("Turn the motors on",
+                "This turns the arm's motors back on and checks that no error is left, like Clear Error in UFACTORY Studio. "
+                "Nothing moves. Press Send this command.", ("send",))
+
+    def act_clear_arm(b):
+        ensure(3)
         try:
             api.clean_error()
             api.clean_warn()
@@ -345,18 +340,159 @@ def run(ctx):
             api.set_state(state=0)
         except Exception as e:
             ctx.log("Clearing the arm's error: %s" % e)
-        time.sleep(1.0)
-        record("clear error", "clean_error, clean_warn, motion_enable, set_mode(0), set_state(0)", getattr(api, "error_code", None))
-        q, bad, h = snapshot()
-        if h.get("error") or bad:
-            guide("Clear the arm's error", "The arm still reports C%s%s." % (h.get("error"), (" (" + h.get("servo") + ")") if bad else ""))
+        time.sleep(1.5)
+        record("clear the arm's error", "clean_error, clean_warn, motion_enable(True), set_mode(0), set_state(0)", getattr(api, "error_code", None))
+        q, bad, err, h = snapshot()
+        if err or bad:
+            W["last"] = "✗ The arm still reports %s (joints: %s). Press the E-stop for 10 seconds, release it, and press Send this command again." % (h["error"], h["servo"])
+            return None
+        W["last"] = "✓ The arm has no errors and its motors are on."
+        return "zero_ok"
+
+    def step_zero_ok():
+        a = reading()
+        j = joint()
+        if a is None:
+            return ("Is the zero right?", "The arm gives no angle for joint %d yet. Press Back and clear the arm's error first." % j, ("back",))
+        return ("Is the zero right?",
+                "Joint %d now reads %+.1f°.\n"
+                "Open UFACTORY Studio and look at its 3D picture of the arm: Studio draws it from these readings. "
+                "Does joint %d in Studio's picture sit like the real arm? (Look at your tape line and photo too.)\n"
+                "Press Yes if they match: the zero is right. Press No if the real joint is turned differently: its zero must be set again." % (j, a, j), ("yes", "no"))
+
+    def act_zero_ok(b):
+        return "done" if b == "yes" else "zero_intro"
+
+    def step_zero_intro():
+        j = joint()
+        return ("Set the zero again",
+                "You will put joint %d at its true zero and tell the arm \"this is 0°\".\n"
+                "Its true zero is where it sits when the whole arm is in its zero pose (every joint at 0°: see Zero position in the xArm user manual).\n"
+                "Is joint %d already exactly at its true zero (for example, you moved it there with UFACTORY Studio's joint controls)?\n"
+                "Yes: go on without unlocking it. No: you will unlock it and turn it by hand." % (j, j), ("yes", "no"))
+
+    def act_zero_intro(b):
+        return "estop2" if b == "yes" else "unlock"
+
+    def step_unlock():
+        j = joint()
+        warn = ("\nJoint %d holds the arm up: when it is unlocked, the arm FALLS. Before you press Send, someone must hold the arm firmly." % j
+                if j in carries() else "\nJoint %d does not hold the arm up: it turns freely once unlocked, the arm does not fall." % j)
+        return ("Unlock the joint",
+                "This unlocks joint %d (H101 D0104 V1 I%d): its motor lets go, so you can turn it by hand.%s\nPress Send this command." % (j, j, warn), ("send",))
+
+    def act_unlock(b):
+        j = joint()
+        ensure(3)
+        code = api.set_servo_addr_16(servo_id=j, addr=UNLOCK_REG, value=1)
+        record("H101 D0104 V1 I%d" % j, "set_servo_addr_16(%d, 0x0104, 1)" % j, code)
+        if code != 0:
+            W["last"] = "✗ The arm answered code %s: the joint may still be locked. Do not force it." % code
+            return None
+        W["last"] = "✓ Joint %d is unlocked." % j
+        return "turn"
+
+    def step_turn():
+        j = joint()
+        return ("Turn it to its zero",
+                "Turn joint %d slowly by hand to its true zero. Its reading is under Joints below (J%d), live.\n"
+                "Hold it there and press Done, next." % (j, j), ("done",))
+
+    def act_turn(b):
+        return "estop2"
+
+    def step_estop2():
+        return ("E-stop, to lock the joint", estop_text("(The joint locks where it is. Keep holding it until the button is down.)"), ("done",))
+
+    def act_estop2(b):
+        if not after_estop():
+            W["last"] = "✗ The arm does not answer yet. Check that the E-stop is released, wait 10 seconds and press Done, next again."
+            return None
+        W["last"] = "✓ The arm answers again."
+        return "send_zero"
+
+    def step_send_zero():
+        j = joint()
+        return ("Make this position 0°",
+                "This tells joint %d that where it is now is 0° (D13 I%d, sent as the SDK's set_servo_zero(%d)). Nothing moves.\n"
+                "Press Send this command." % (j, j, j), ("send",))
+
+    def act_send_zero(b):
+        j = joint()
+        ensure(3)
+        code = api.set_servo_zero(servo_id=j)
+        record("D13 I%d" % j, "set_servo_zero(%d)" % j, code)
+        if code != 0:
+            W["last"] = "✗ The arm answered code %s: it did not take it." % code
+            return None
+        W["last"] = "✓ Sent D13 I%d: the arm accepted it (answer 0)." % j
+        return "estop3"
+
+    def step_estop3():
+        return ("E-stop, so the new zero takes effect", estop_text(""), ("done",))
+
+    def act_estop3(b):
+        if not after_estop():
+            W["last"] = "✗ The arm does not answer yet. Check that the E-stop is released, wait 10 seconds and press Done, next again."
+            return None
+        W["last"] = "✓ The arm answers again."
+        return "clear_arm"
+
+    def step_done():
+        return ("Finished",
+                "✓ The arm has no errors and joint %d's zero is right.\n"
+                "Press Finish to end. Then move the arm slowly once (UFACTORY Studio, or flow 0 · Robot test) to check." % joint(), ("finish",))
+
+    STEPS = {"read": (step_read, act_read), "mark": (step_mark, None), "send_clear": (step_send_clear, act_send_clear),
+             "estop1": (step_estop1, act_estop1), "retry": (step_retry, None), "clear_arm": (step_clear_arm, act_clear_arm),
+             "zero_ok": (step_zero_ok, act_zero_ok), "zero_intro": (step_zero_intro, act_zero_intro), "unlock": (step_unlock, act_unlock),
+             "turn": (step_turn, act_turn), "estop2": (step_estop2, act_estop2), "send_zero": (step_send_zero, act_send_zero),
+             "estop3": (step_estop3, act_estop3), "done": (step_done, None)}
+    NEXT = {"mark": "send_clear"}
+    LABEL = {"done": "Done, next", "send": "Send this command", "yes": "Yes", "no": "No", "back": "Back", "finish": "Finish"}
+
+    def show():
+        title, text, takes = STEPS[W["step"]][0]()
+        W["takes"] = takes
+        n = len(W["history"]) + 1
+        ctx.telemetry("guide", {"step": "Step %d · %s" % (n, title), "text": text, "joint": ("J%d" % joint()) if joint() else "not chosen",
+                                "press": "Press: " + " or ".join(LABEL[t] for t in takes), "last": W["last"] or "—", "command": command()})
+        ctx.log("[Step %d · %s] %s%s" % (n, title, (W["last"] + " ") if W["last"] else "", text.replace("\n", " ")))
+
+    def go(step, remember=True):
+        if remember and W["step"]:
+            W["history"].append(W["step"])
+        W["step"] = step
+        show()
+
+    def press(b):
+        if b == "finish":
+            raise Stop("Finished.")
+        if b == "restart":
+            W["history"], W["last"] = [], ""
+            W["step"] = None
+            go("read")
+            return
+        if b == "back":
+            if W["history"]:
+                W["step"] = W["history"].pop()
+                W["last"] = ""
+                show()
+            return
+        if b not in W.get("takes", ()):
+            W["last"] = "✗ Nothing done: this step needs " + " or ".join(LABEL[t] for t in W["takes"]) + "."
+            show()
+            return
+        W["last"] = ""
+        act = STEPS[W["step"]][1]
+        nxt = act(b) if act else NEXT.get(W["step"])
+        if nxt:
+            go(nxt)
         else:
-            guide("Done?", "No errors: the arm is enabled and ready. Check the joint's zero in UFACTORY Studio (move to the zero pose slowly), then press Finish. "
-                           "Flow 0 · Robot test moves one joint at a time to check it.")
+            show()
 
-    check(first=True)
+    go("read", remember=False)
 
-    # -- the controls --------------------------------------------------------------------------------------------
     last_tick = 0.0
     try:
         while time.time() < deadline:
@@ -365,33 +501,22 @@ def run(ctx):
                 c, v = str(d.get("control", "")).strip(), d.get("value")
                 cl = c.lower()
                 if cl == "joint":
-                    S["chosen"] = None if str(v).lower().startswith("auto") else int(str(v).strip()[0])
-                    S["pending"] = None
-                    guide(S["step"], "Joint %s chosen." % (joint() or "auto (none reports an error)"))
-                elif cl == "clear":
-                    S["clear"] = str(v)
-                    S["pending"] = None
-                    guide(S["step"], "Clear the encoder error will send H101 D0813 V%d." % (256 if "18" in S["clear"] else 2))
-                elif cl.startswith("check"):
-                    check()
-                elif cl.startswith("clear the encoder"):
-                    clear_encoder()
-                elif "e-stop" in cl:
-                    after_estop()
-                elif cl.startswith("unlock"):
-                    unlock()
-                elif cl.startswith("set this position"):
-                    set_zero()
-                elif cl.startswith("clear the arm"):
-                    clear_arm_error()
-                elif cl in ("finish", "end"):
-                    raise Stop("Finished.")
+                    W["chosen"] = None if str(v).lower().startswith("auto") else int(str(v).strip()[0])
+                    W["last"] = "✓ Joint %s chosen." % (joint() or "none")
+                    show()
+                elif cl == "command":
+                    W["value"] = 256 if "256" in str(v) else 2
+                    W["last"] = "✓ The clear command is now %s." % command()
+                    show()
+                elif cl in BUTTONS:
+                    press(BUTTONS[cl])
             if time.time() - last_tick > 1.0:
                 last_tick = time.time()
                 ensure()
                 snapshot()
     except Stop as e:
-        guide("Finished", str(e) + " Every command sent is in joint_repair.csv (Results).")
+        ctx.telemetry("guide", {"step": "Finished", "text": str(e) + " Every command sent is in joint_repair.csv (Results).", "press": "—", "last": W["last"] or "—"})
+        ctx.log("Finished.")
     finally:
         try:
             api.disconnect()

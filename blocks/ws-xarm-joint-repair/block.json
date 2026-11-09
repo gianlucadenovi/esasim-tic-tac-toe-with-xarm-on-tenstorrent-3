@@ -6,8 +6,8 @@
     "icon": "robot-arm",
     "side": "backend",
     "customizable": true,
-    "summary": "UFACTORY's procedure for a joint's encoder error (S17, S18) and for setting a joint's zero again, step by step from the Controls view, without Studio's Joint debug page.",
-    "help": "For an xArm whose UFACTORY Studio has no Joint debug page (before 2.4.0), or that cannot be updated. It connects to the arm at Arm IP address, reads which joint reports an error (S17 single-turn or S18 multi-turn encoder error) and guides you, one step at a time in the Controls view (live: guide), through UFACTORY's procedure: mark the joint; Clear the encoder error (H101 D0813 V2 I<joint>, or V256 for S18); E-stop; check the zero; if it was lost, Unlock the joint (H101 D0104 V1 I<joint>), turn it by hand to its zero, E-stop, Set this position as zero (D13 I<joint>, sent as the SDK's set_servo_zero), E-stop; Clear the arm's error. Every command that changes the arm is sent only on a second press of its button within 15 seconds, and is written to joint_repair.csv with the arm's answer. Joints 2 and 3 hold the arm up: unlocked, the arm falls unless someone holds it. Robot = rehearsal sends nothing (a pretend arm with an S17 error answers), to learn the steps first. Controls (channel \"control\"): select joint auto,1…7 · select clear S17-single-turn,S18-multi-turn · Check the arm · Clear the encoder error · I pressed and released the E-stop · Unlock the joint · Set this position as zero · Clear the arm's error · Finish. Live: guide (step, text, joint), health (connected, state, error, warning, servo, angles), joints. Use only as UFACTORY's support tells you: these are their debug commands.",
+    "summary": "A wizard for UFACTORY's joint-encoder repair (S17, S18) and zero reset: one instruction at a time, a ✓ or ✗ after each, then the next step.",
+    "help": "For an xArm whose UFACTORY Studio has no Joint debug page (before 2.4.0), or cannot be updated. Connects to the arm at Arm IP address, reads which joint reports an error, and guides you in a Controls view one step at a time (live: guide.step, guide.text, guide.press, guide.last, guide.command): read the instruction, do it, press the button it names (Done, next · Send this command · Yes · No); the block checks what it can on the arm, shows ✓ or ✗ (guide.last) and the next step. Steps: read the arm; mark the joint; send the clear command (H101 D0813 V2 I<joint>, or V256: select command); E-stop; clear the arm's error; is the zero right? If not: unlock the joint (H101 D0104 V1 I<joint>), turn it by hand to its zero, E-stop, make this position 0° (D13 I<joint>, sent as the SDK's set_servo_zero), E-stop, motors on, check. A command is sent only from the step that shows it; a button pressed at the wrong step does nothing and says which one the step needs. Back goes one step back, Start over reads the arm again, Finish ends. Every command and the arm's answer go to joint_repair.csv. The joints that hold the arm up (2 and 3; 2 and 4 on an xArm 7) make the arm fall when unlocked: their step says so. Robot = rehearsal sends nothing: a pretend xArm 7 with an S18 error answers. Controls (channel \"control\"): select joint auto,1…7 · select command V2,V256 · button Done, next · Send this command · Yes · No · Back · Start over · Finish. Live: guide, health (connected, error, servo, angles), joints. Use only as UFACTORY's support tells you: these are their debug commands.",
     "inputs": [],
     "outputs": [
         {
@@ -30,7 +30,7 @@
                 "rehearsal",
                 "real xArm"
             ],
-            "help": "rehearsal: nothing is sent to any arm; a pretend arm with an S17 error answers, to learn the steps"
+            "help": "rehearsal: nothing is sent to any arm; a pretend xArm 7 with an S18 error answers, to learn the steps"
         },
         {
             "key": "ip",
@@ -42,9 +42,9 @@
             "key": "rehearsal_joint",
             "label": "Joint with the error (rehearsal)",
             "type": "number",
-            "default": 5,
+            "default": 1,
             "min": 1,
-            "max": 6
+            "max": 7
         },
         {
             "key": "minutes",
@@ -68,6 +68,6 @@
         "xarm-python-sdk"
     ],
     "esasim": {
-        "version": 1
+        "version": 2
     }
 }

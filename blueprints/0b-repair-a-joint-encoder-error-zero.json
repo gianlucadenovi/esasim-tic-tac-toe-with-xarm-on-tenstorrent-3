@@ -6,7 +6,7 @@
     "name": "0b · Repair a joint (encoder error, zero)",
     "description": "UFACTORY's procedure for a joint's S17/S18 encoder error and its zero, step by step with buttons, for an arm without Studio's Joint debug page. Starts in rehearsal: set Robot to real xArm when ready.",
     "published_version": 2,
-    "updated": "2026-11-09 03:33:50",
+    "updated": "2026-11-09 03:34:20",
     "graph": {
         "nodes": [
             {

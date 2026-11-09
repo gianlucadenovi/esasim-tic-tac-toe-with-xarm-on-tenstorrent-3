@@ -65,7 +65,7 @@
         },
         {
             "id": "ws-xarm-joint-repair",
-            "version": 1,
+            "version": 2,
             "name": "xArm joint repair"
         },
         {
