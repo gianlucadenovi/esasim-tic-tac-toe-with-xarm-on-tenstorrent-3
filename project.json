@@ -48,7 +48,7 @@
         {
             "name": "5 · Play (simulation or the real xArm)",
             "file": "blueprints/5-play-simulation-or-the-real-xarm.json",
-            "published_version": 4,
+            "published_version": 5,
             "nodes": 18
         },
         {

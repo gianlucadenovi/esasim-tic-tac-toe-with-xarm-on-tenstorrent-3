@@ -5,8 +5,8 @@
     },
     "name": "5 · Play (simulation or the real xArm)",
     "description": "The robot plays the visitor: camera and board reader see the visitor's moves, the player network chooses the robot's, the arm draws. Your move, New game and Stop are in the View.",
-    "published_version": 4,
-    "updated": "2026-11-09 06:20:15",
+    "published_version": 5,
+    "updated": "2026-11-09 18:24:41",
     "graph": {
         "nodes": [
             {
@@ -144,7 +144,7 @@
                 "x": 432,
                 "y": 1320,
                 "params": {
-                    "interval": 0.3,
+                    "interval": 0.5,
                     "channels": "joints,twin,twin_check,scene,paper",
                     "keep": 20000
                 },
