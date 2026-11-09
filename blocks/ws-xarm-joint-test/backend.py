@@ -1,5 +1,5 @@
 # ── EsaSim block ──────────────────────────────────────────────────────
-# xArm joint test (ws-xarm-joint-test) · version 5 · machine block, Python: def run(ctx)
+# xArm joint test (ws-xarm-joint-test) · version 6 · machine block, Python: def run(ctx)
 # Checks that the xArm is online and healthy, then moves it one joint at a time, slowly, from the Controls view.
 # Workspace: Gianluca De Novi's workspace · Author: Gianluca De Novi
 # Saved: 2026-11-09
@@ -140,7 +140,7 @@ def run(ctx):
     tool_len = float(p.get("tool_length", 0))
     channel = str(p.get("channel") or "control")
     deadline = time.time() + float(p.get("minutes", 30)) * 60
-    log = csv.writer(open(ctx.output("log", "joint_test.csv"), "w", newline=""))
+    log = csv.writer(open(ctx.output("log", "joint_test.csv"), "w", newline="", encoding="utf-8"))
     log.writerow(["t", "event", "j1", "j2", "j3", "j4", "j5", "j6", "note"])
 
     def interrupted(*_):

@@ -128,6 +128,6 @@
         "xarm-python-sdk"
     ],
     "esasim": {
-        "version": 5
+        "version": 6
     }
 }
