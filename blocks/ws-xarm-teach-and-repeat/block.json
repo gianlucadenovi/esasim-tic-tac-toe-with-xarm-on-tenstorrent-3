@@ -1,0 +1,158 @@
+{
+    "id": "ws-xarm-teach-and-repeat",
+    "version": "1",
+    "name": "xArm teach and repeat",
+    "category": "Devices",
+    "icon": "robot-arm",
+    "side": "backend",
+    "customizable": true,
+    "summary": "Record a movement by moving the xArm by hand, then have it repeat the movement any number of times, slower or faster, and go back to where it started.",
+    "help": "Teaching by hand for the xArm. In a Controls view: Record puts the arm in manual mode (it holds its own weight and you move it by hand; the payload set in UFACTORY Studio must match what is mounted, or the arm drifts) and records its joints about 50 times a second; Stop ends the recording (the arm holds where it is; still moments at both ends are trimmed and the hand's tremor smoothed). Repeat plays it back Repeats times: the arm first goes to the pose where the movement started (a joint move at Move speed), then follows the recorded joints in the same rhythm (servo mode, 100 commands a second), and at the end goes back to that start pose. The Speed slider (25 % to 150 %) plays it slower or faster, also while it plays; no joint ever goes faster than Max joint speed (where the recording is faster, the playback slows down there). Stop stops the arm at once in any phase; Go to start moves to the start pose; End finishes. Clear the space around the arm: the move to the start pose is a straight joint move. Every recording is saved as recording.csv (t, j1…jN in degrees); connect one to Recording to play it again in another run. Robot model (optional): connect the xArm model block, so the 3D view shows the arm. Robot = simulation sends nothing: a pretend hand moves a pretend arm. Controls (channel \"control\"): Record, Stop, slider repeats, Repeat, slider speed, Go to start, End. Live: status (text, detail, state, progress), joints.",
+    "inputs": [
+        {
+            "id": "robot",
+            "label": "Robot model",
+            "type": "files",
+            "optional": true,
+            "formats": [
+                "gz",
+                "txt"
+            ],
+            "help": "From xArm model: connected, the model is made before this block starts, so the 3D view shows the arm"
+        },
+        {
+            "id": "recording",
+            "label": "Recording",
+            "type": "table",
+            "optional": true,
+            "formats": [
+                "csv"
+            ],
+            "help": "A recording.csv from an earlier run, to play again"
+        }
+    ],
+    "outputs": [
+        {
+            "id": "recording",
+            "label": "Recording",
+            "type": "table",
+            "formats": [
+                "csv"
+            ],
+            "help": "recording.csv: t (s) and the joint angles (degrees), smoothed and trimmed"
+        },
+        {
+            "id": "log",
+            "label": "Session log",
+            "type": "table",
+            "formats": [
+                "csv"
+            ],
+            "help": "session.csv: recordings, repeats, speed changes, stops"
+        }
+    ],
+    "params": [
+        {
+            "key": "robot",
+            "label": "Robot",
+            "type": "select",
+            "default": "real xArm",
+            "options": [
+                "real xArm",
+                "simulation"
+            ],
+            "help": "simulation: nothing is sent to any arm"
+        },
+        {
+            "key": "arm",
+            "label": "Arm",
+            "type": "select",
+            "default": "xArm 6",
+            "options": [
+                "xArm 6",
+                "xArm 7"
+            ]
+        },
+        {
+            "key": "ip",
+            "label": "Arm IP address",
+            "type": "text",
+            "default": "192.168.1.200"
+        },
+        {
+            "key": "repeats",
+            "label": "Repeats",
+            "type": "number",
+            "default": 3,
+            "min": 1,
+            "max": 100,
+            "help": "Also the repeats slider"
+        },
+        {
+            "key": "speed",
+            "label": "Speed (%)",
+            "type": "number",
+            "default": 100,
+            "min": 25,
+            "max": 150,
+            "help": "Also the speed slider: 100 = as recorded"
+        },
+        {
+            "key": "max_speed",
+            "label": "Max joint speed (degrees/s)",
+            "type": "number",
+            "default": 60,
+            "min": 5,
+            "max": 120,
+            "help": "No joint goes faster during a repeat"
+        },
+        {
+            "key": "move_speed",
+            "label": "Move speed (degrees/s)",
+            "type": "number",
+            "default": 20,
+            "min": 5,
+            "max": 45,
+            "help": "Going to the start pose and back"
+        },
+        {
+            "key": "rate",
+            "label": "Recording rate (per second)",
+            "type": "number",
+            "default": 50,
+            "min": 10,
+            "max": 100
+        },
+        {
+            "key": "max_seconds",
+            "label": "Longest recording (s)",
+            "type": "number",
+            "default": 120,
+            "min": 5,
+            "max": 600
+        },
+        {
+            "key": "minutes",
+            "label": "Longest session (minutes)",
+            "type": "number",
+            "default": 60,
+            "min": 1,
+            "max": 240
+        },
+        {
+            "key": "channel",
+            "label": "Controls channel",
+            "type": "text",
+            "default": "control"
+        }
+    ],
+    "hardware": [
+        "cpu"
+    ],
+    "packages": [
+        "xarm-python-sdk"
+    ],
+    "esasim": {
+        "version": 1
+    }
+}

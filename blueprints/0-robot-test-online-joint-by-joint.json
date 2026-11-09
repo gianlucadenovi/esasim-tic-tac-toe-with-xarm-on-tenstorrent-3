@@ -5,8 +5,8 @@
     },
     "name": "0 · Robot test (online, joint by joint)",
     "description": "Checks that the xArm answers and is healthy, then moves it one joint at a time, slowly, from the View: J1 − … J6 +, Back to start, Stop.",
-    "published_version": 3,
-    "updated": "2026-11-09 05:23:52",
+    "published_version": 4,
+    "updated": "2026-11-09 05:35:05",
     "graph": {
         "nodes": [
             {
@@ -58,6 +58,7 @@
                 "x": 0,
                 "y": 520,
                 "params": {
+                    "arm": "xArm 6",
                     "detail": 1
                 },
                 "title": "xArm 6 model"
@@ -103,6 +104,17 @@
             }
         ],
         "edges": [
+            {
+                "id": "arm_model.model>test.robot",
+                "from": {
+                    "node": "arm_model",
+                    "port": "model"
+                },
+                "to": {
+                    "node": "test",
+                    "port": "robot"
+                }
+            },
             {
                 "id": "test.telemetry>tel.from",
                 "from": {

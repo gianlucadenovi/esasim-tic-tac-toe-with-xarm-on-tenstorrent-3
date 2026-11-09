@@ -12,7 +12,7 @@
         {
             "name": "0 · Robot test (online, joint by joint)",
             "file": "blueprints/0-robot-test-online-joint-by-joint.json",
-            "published_version": 3,
+            "published_version": 4,
             "nodes": 7
         },
         {
@@ -50,6 +50,12 @@
             "file": "blueprints/5-play-simulation-or-the-real-xarm.json",
             "published_version": 4,
             "nodes": 18
+        },
+        {
+            "name": "6 · Teach by hand and repeat",
+            "file": "blueprints/6-teach-by-hand-and-repeat.json",
+            "published_version": 0,
+            "nodes": 6
         }
     ],
     "blocks": [
@@ -107,6 +113,11 @@
             "id": "ws-tic-tac-toe-game",
             "version": 6,
             "name": "Tic-tac-toe game"
+        },
+        {
+            "id": "ws-xarm-teach-and-repeat",
+            "version": 1,
+            "name": "xArm teach and repeat"
         }
     ]
 }

@@ -21,6 +21,7 @@
 - **3 · Train the player by self-play**: Thousands of games against itself on the accelerator, tested against a random and a perfect player as it learns; the model goes to the models dataset.
 - **4 · Calibrate the arm and the camera**: The pen touches the board's four corners (dry run first), and the camera checks it finds and straightens the board.
 - **5 · Play (simulation or the real xArm)**: The robot plays the visitor: camera and board reader see the visitor's moves, the player network chooses the robot's, the arm draws. Your move, New game and Stop are in the View.
+- **6 · Teach by hand and repeat**: Record moves the arm into manual mode: guide it by hand while the flow records. Stop ends the recording. Repeat plays it back N times at the chosen speed, then the arm returns to where it started.
 
 ## What you need
 
@@ -50,13 +51,14 @@ An [EsaSim](https://esacode.com/) project of the workspace Gianluca De Novi's wo
 
 ### Blueprints in this repository
 
-- [0 · Robot test (online, joint by joint)](blueprints/0-robot-test-online-joint-by-joint.json) · 7 blocks · version 3
+- [0 · Robot test (online, joint by joint)](blueprints/0-robot-test-online-joint-by-joint.json) · 7 blocks · version 4
 - [0b · Repair a joint (encoder error, zero)](blueprints/0b-repair-a-joint-encoder-error-zero.json) · 6 blocks · version 3
 - [1 · Print the board](blueprints/1-print-the-board.json) · 2 blocks
 - [2 · Train the board reader (simulation + rendered cells)](blueprints/2-train-the-board-reader-simulation-rendered-cells.json) · 14 blocks · version 2
 - [3 · Train the player by self-play](blueprints/3-train-the-player-by-self-play.json) · 6 blocks · version 1
 - [4 · Calibrate the arm and the camera](blueprints/4-calibrate-the-arm-and-the-camera.json) · 8 blocks
 - [5 · Play (simulation or the real xArm)](blueprints/5-play-simulation-or-the-real-xarm.json) · 18 blocks · version 4
+- [6 · Teach by hand and repeat](blueprints/6-teach-by-hand-and-repeat.json) · 6 blocks
 
 ### Workspace blocks it uses
 
@@ -71,5 +73,6 @@ An [EsaSim](https://esacode.com/) project of the workspace Gianluca De Novi's wo
 - [Train player by self-play](blocks/ws-train-player-by-self-play) · version 2
 - [Read board](blocks/ws-read-board) · version 2
 - [Tic-tac-toe game](blocks/ws-tic-tac-toe-game) · version 6
+- [xArm teach and repeat](blocks/ws-xarm-teach-and-repeat) · version 1
 
 Keys pasted in blocks (secret settings) are not saved here. Datasets, results and the team stay in EsaSim.
