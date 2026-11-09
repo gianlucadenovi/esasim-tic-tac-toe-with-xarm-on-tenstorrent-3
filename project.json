@@ -55,7 +55,7 @@
     "blocks": [
         {
             "id": "ws-xarm-joint-test",
-            "version": 4,
+            "version": 5,
             "name": "xArm joint test"
         },
         {

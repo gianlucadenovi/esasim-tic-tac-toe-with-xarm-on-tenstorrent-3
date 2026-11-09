@@ -7,8 +7,20 @@
     "side": "backend",
     "customizable": true,
     "summary": "Checks that the xArm is online and healthy, then moves it one joint at a time, slowly, from the Controls view.",
-    "help": "Connects to the arm at Arm IP address and reports its health (live: health — connected, state, mode, error, warning, hottest joint; the log has the firmware and serial number). If the arm cannot be reached, the log says why: this machine has no address on the arm's network (and how to give it one), nothing answers at that address, or something else holds the connection. If the arm reports a joint error (C10 to C17), the status and the log name the joint, its own servo error code (S…) and UFACTORY's instruction for it (live: servo). Then each press of J1 − … J6 + in a Controls view moves that one joint by Step degrees, at most Joint speed (never more than 30°/s); select step changes the step (at most 15°). Every step is checked before it is sent: the joint stays 5° inside its limits, and the elbow, wrist, flange (and the tool, if Tool length is set) stay at least Clearance above the table. Presses made while the arm moves are dropped. Stop stops the motion at once; Back to start returns every joint to where it was when the test began; Clear error clears the arm's error after you fixed its cause; End test finishes. The controller is also asked to limit the joint speed by itself (reduced mode, restored at the end), but older firmware (1.4 and before) does not have reduced mode or self-collision detection: each call is checked and the log says what is actually in force rather than assuming it was taken. Whatever the controller accepts, every step is sent with its own speed and acceleration cap and checked before it leaves, so the test is safe on any firmware. The arm stays where it is when the test ends. Robot = simulation moves the digital twin only. Controls (channel \"control\"): J1 − … J6 +, step N, Stop, Back to start, Clear error, End test. Live: status, health, servo, joints, jog (one line per joint), scene.",
-    "inputs": [],
+    "help": "Connects to the arm at Arm IP address and reports its health (live: health — connected, state, mode, error, warning, hottest joint; the log has the firmware and serial number). If the arm cannot be reached, the log says why: this machine has no address on the arm's network (and how to give it one), nothing answers at that address, or something else holds the connection. If the arm reports a joint error (C10 to C17), the status and the log name the joint, its own servo error code (S…) and UFACTORY's instruction for it (live: servo); flow 0b repairs encoder errors. Then each press of J1 − … J6 + in a Controls view moves that one joint by Step degrees, at most Joint speed (never more than 30°/s); select step changes the step (at most 15°). Every step is checked before it is sent: the joint stays 5° inside its limits, and the elbow, wrist, flange (and the tool, if Tool length is set) stay at least Clearance above the table. Presses made while the arm moves are dropped. Stop stops the motion at once; Back to start returns every joint to where it was when the test began; Clear error clears the arm's error after you fixed its cause; End test finishes. The block changes no setting of the controller (older firmware refuses some of them): the speed and acceleration are those of each move it sends. The arm stays where it is when the test ends. Robot model (optional): connect the xArm model block, so it is made before the test starts and the 3D view shows the arm. Robot = simulation moves the digital twin only. Controls (channel \"control\"): J1 − … J6 +, step N, Stop, Back to start, Clear error, End test. Live: status, health, servo, joints, jog (one line per joint), scene.",
+    "inputs": [
+        {
+            "id": "robot",
+            "label": "Robot model",
+            "type": "files",
+            "optional": true,
+            "formats": [
+                "gz",
+                "txt"
+            ],
+            "help": "From xArm model: connected, the model is made before the test starts, so the 3D view shows the arm"
+        }
+    ],
     "outputs": [
         {
             "id": "log",
@@ -116,6 +128,6 @@
         "xarm-python-sdk"
     ],
     "esasim": {
-        "version": 4
+        "version": 5
     }
 }

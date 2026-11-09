@@ -1,11 +1,11 @@
 # ── EsaSim block ──────────────────────────────────────────────────────
-# xArm joint test (ws-xarm-joint-test) · version 4 · machine block, Python: def run(ctx)
+# xArm joint test (ws-xarm-joint-test) · version 5 · machine block, Python: def run(ctx)
 # Checks that the xArm is online and healthy, then moves it one joint at a time, slowly, from the Controls view.
 # Workspace: Gianluca De Novi's workspace · Author: Gianluca De Novi
 # Saved: 2026-11-09
 #
 # Inputs   ctx.inputs["id"] is a list of files: .path .name .size .read_text() .read_json()
-#   (none)
+#   robot       Files (gz, txt)           Robot model · optional · From xArm model: connected, the model is made before the test starts, so the 3D view shows the arm
 # Outputs  ctx.output("id", "name.ext") is the path to write; ctx.write_json / ctx.write_text
 #   log         Table (csv)               Test log · joint_test.csv: every move asked, refused and reached, with the joint angles
 #   telemetry   Live telemetry            ctx.telemetry("channel", data) while it runs
@@ -30,7 +30,9 @@
 angles, temperatures), then moves one joint at a time by a small step from the Controls view (J1 − / J1 + … J6 +),
 slowly, each step checked before it is sent: inside the joint's limits (with a margin), and the elbow, wrist, flange
 and tool kept above the table. Back to start returns every joint to where it was when the test began. Stop stops
-the motion at once. With Robot = simulation nothing is sent anywhere: the arm's digital twin moves instead."""
+the motion at once. With Robot = simulation nothing is sent anywhere: the arm's digital twin moves instead.
+
+The block changes no setting of the controller: speeds and accelerations are those of each move it sends."""
 import csv
 import math
 import signal
@@ -43,20 +45,6 @@ MAX_JOINT_SPEED = 30.0   # degrees/s: a test goes slowly, whatever the settings 
 MAX_JOINT_ACC = 120.0
 MAX_STEP = 15.0          # degrees per press, at most
 MARGIN = 5.0             # degrees kept from each joint's end stop
-
-# UFACTORY's API codes, for the ones a setter or a move realistically answers. The SDK returns these: it does
-# not raise, so every call has to be looked at or a failure passes for a success.
-CODE_MEANING = {
-    -4: "the command does not exist in this firmware",
-    -2: "the arm is not ready: not enabled, or no state set",
-    -1: "the arm is not connected",
-    1: "the arm has an error that has not been cleared",
-    2: "the arm has a warning that has not been cleared",
-    3: "no answer in time, usually a command this firmware does not have",
-    4: "the reply's length was wrong",
-    5: "the reply's number was wrong",
-    9: "the emergency stop is pressed",
-}
 
 
 class Stop(Exception):
@@ -192,7 +180,7 @@ def run(ctx):
         return None
 
     # -- the arm --------------------------------------------------------------------------------------------------
-    api, prev_reduced, reduced_on = None, None, False
+    api = None
     q = [float(v) for v in str(p.get("sim_start") or "0,-20,-30,0,50,0").split(",")][:6] if sim else None
 
     def angles():
@@ -236,6 +224,10 @@ def run(ctx):
         ctx.telemetry("health", h)
         return h
 
+    for f in (ctx.inputs.get("robot") or []):
+        if f.name.endswith(".gz"):
+            ctx.log("Robot model for the 3D view: %s" % f.name)
+
     if sim:
         say("Simulation: no arm is moved. The digital twin starts at %s." % ", ".join("%.0f°" % v for v in q))
     else:
@@ -251,67 +243,23 @@ def run(ctx):
             raise RuntimeError("The arm at %s did not accept the connection (%s). Is UFACTORY Studio or another program connected to it? Close it and run again." % (ip, e))
         if not api.connected:
             raise RuntimeError("Cannot reach the xArm at %s: check that the controller is on, the address, and that this machine is on the arm's network (ping %s)." % (ip, ip))
-        info = {"firmware": str(getattr(api, "version", "") or ""), "serial": str(getattr(api, "sn", "") or ""), "axes": getattr(api, "axis", None)}
+        info = {"firmware": str(getattr(api, "version", "") or ""), "serial": str(getattr(api, "sn", "") or "")}
         ctx.log("Connected: %s" % ", ".join("%s %s" % (k, v) for k, v in info.items() if v not in ("", None)))
+        if api.warn_code:
+            ctx.log("Warning W%s from the arm, cleared." % api.warn_code)
+            api.clean_warn()
         h = health(info)
         if api.error_code:
             bad = servo_errors() if 10 <= int(api.error_code) <= 17 else []
             say(("The arm reports error C%s: %s. Fix its cause, then press Clear error." % (api.error_code, "; ".join("joint %s has servo error S%s (%s)" % (m["servo_id"], m["code"], str(m.get("title", "")).strip()) for m in bad)))
                 if bad else "The arm reports error C%s: press Clear error once the cause is fixed (see UFACTORY's manual for the code)." % api.error_code)
         else:
-            if api.warn_code:
-                ctx.log("Warning %s from the arm, cleared." % api.warn_code)
-                api.clean_warn()
             api.motion_enable(enable=True)
             api.set_mode(0)
             api.set_state(state=0)
             time.sleep(0.5)
-
-        # -- the controller's own limits ------------------------------------------------------------------------
-        # Reduced mode and self-collision detection belong to newer firmware. Firmware 1.4 answers 3 (no reply in
-        # time) or 2 (a warning is still latched) instead of taking them. The SDK returns those codes rather than
-        # raising, so each call is looked at: a refused one is named, and the controller warning it latched is
-        # cleared at once — left there, it makes every later command, jogs included, answer 2.
-        fw = str(getattr(api, "version", "") or "?")
-
-        def try_set(name, fn, *args):
-            try:
-                code = fn(*args)
-            except Exception as e:
-                ctx.log("%s: not applied (%s)." % (name, e))
-                return False
-            if isinstance(code, (list, tuple)):
-                code = code[0] if code else -1
-            if code == 0:
-                return True
-            ctx.log("%s: not applied by firmware %s — code %s, %s." % (name, fw, code, CODE_MEANING.get(code, "see UFACTORY's API code list")))
-            try:
-                if api.warn_code:
-                    ctx.log("Controller warning W%s, raised by %s, cleared so it cannot block later commands." % (api.warn_code, name))
-                    api.clean_warn()
-            except Exception:
-                pass
-            return False
-
-        try:
-            code, st = api.get_reduced_states()
-            if code == 0 and st:
-                prev_reduced = st
-        except Exception:
-            pass
-        capped = try_set("Reduced-mode joint speed", api.set_reduced_max_joint_speed, speed)
-        try_set("Joint acceleration", api.set_joint_maxacc, accel)
-        selfcoll = try_set("Self-collision detection", api.set_self_collision_detection, True)
-        reduced_on = try_set("Reduced mode", api.set_reduced_mode, True) if capped else False
-        if reduced_on:
-            ctx.log("Controller limits in force: joints at most %.0f°/s and %.0f°/s²%s."
-                    % (speed, accel, ", self-collision detection on" if selfcoll else "; self-collision detection left as it was"))
-        else:
-            ctx.log("Firmware %s did not take reduced mode%s, so the controller is not policing the speed itself. Every step is still sent "
-                    "with its own %.0f°/s and %.0f°/s² cap and checked before it leaves, which is what keeps the test slow."
-                    % (fw, "" if selfcoll else " or self-collision detection", speed, accel))
-        if api.warn_code:  # nothing below should start with a warning latched
-            api.clean_warn()
+        ctx.log("Every move: at most %.0f°/s and %.0f°/s², checked against the joints' limits and the table before it is sent. "
+                "The controller's own settings are left as they are." % (speed, accel))
 
     start = angles()
     report(start)
@@ -361,17 +309,9 @@ def run(ctx):
                     break
                 time.sleep(0.05)
         else:
-            code = api.set_servo_angle(angle=[float(v) for v in target] + ([0.0] * (api.axis - 6) if api.axis > 6 else []), speed=speed, mvacc=accel,
-                                       is_radian=False, wait=False)
+            code = api.set_servo_angle(angle=[float(v) for v in target], speed=speed, mvacc=accel, is_radian=False, wait=False)
             if code != 0:
-                say("The arm refused the move: code %s, %s (error %s, warning %s)."
-                    % (code, CODE_MEANING.get(code, "see UFACTORY's API code list"), api.error_code, api.warn_code))
-                log.writerow([round(time.time(), 2), "refused"] + [round(v, 2) for v in target] + ["code %s" % code])
-                try:  # a latched warning would refuse every press after this one too
-                    if api.warn_code:
-                        api.clean_warn()
-                except Exception:
-                    pass
+                say("The arm refused the move (code %s, error %s, warning %s)." % (code, api.error_code, api.warn_code))
                 return
             t0 = time.time()
             time.sleep(0.15)
@@ -461,9 +401,7 @@ def run(ctx):
         raise
     finally:
         if api is not None:
-            try:  # the controller as it was before the test, but only what this test actually changed
-                if reduced_on and prev_reduced is not None:
-                    api.set_reduced_mode(bool(prev_reduced[0]))
+            try:
                 if not stopped:
                     api.set_state(0)
             except Exception:
