@@ -1,16 +1,17 @@
 # ── EsaSim block ──────────────────────────────────────────────────────
-# xArm joint repair (ws-xarm-joint-repair) · version 2 · machine block, Python: def run(ctx)
+# xArm joint repair (ws-xarm-joint-repair) · version 3 · machine block, Python: def run(ctx)
 # A wizard for UFACTORY's joint-encoder repair (S17, S18) and zero reset: one instruction at a time, a ✓ or ✗ after each, then the next step.
 # Workspace: Gianluca De Novi's workspace · Author: Gianluca De Novi
 # Saved: 2026-11-09
 #
 # Inputs   ctx.inputs["id"] is a list of files: .path .name .size .read_text() .read_json()
-#   (none)
+#   robot       Files (gz, txt)           Robot model · optional · From xArm model: connected, the model is made before the repair starts, so the 3D view shows the arm
 # Outputs  ctx.output("id", "name.ext") is the path to write; ctx.write_json / ctx.write_text
 #   log         Table (csv)               Repair log · joint_repair.csv: every command sent, the arm's answer, its errors and joint angles at that moment
 #   telemetry   Live telemetry            ctx.telemetry("channel", data) while it runs
 # Settings ctx.params["key"]
 #   robot       select    Robot = "rehearsal" of rehearsal | real xArm
+#   arm         select    Arm = "xArm 6" of xArm 6 | xArm 7 | xArm 5
 #   ip          text      Arm IP address = "192.168.1.200"
 #   rehearsal_joint number    Joint with the error (rehearsal) = 1
 #   minutes     number    Longest session (minutes) = 60
@@ -20,8 +21,8 @@
 # EsaSim rewrites these lines from the block's definition each time it is saved: change the definition, not them.
 # ── end of EsaSim block header ────────────────────────────────────────
 
-"""xArm joint repair, as a wizard: one instruction at a time in the Controls view; you do it, press the button the
-instruction names, the block checks what it can on the arm, says whether it worked (✓ / ✗), and shows the next step.
+"""xArm joint repair, as a wizard: one instruction at a time in the Step-by-step guide view; you do it, press the
+button the step shows, the block checks what it can on the arm, says whether it worked (✓ / ✗), and shows the next step.
 
 It follows UFACTORY's procedure for a joint's encoder error (S17 single-turn, S18 multi-turn) and for setting a
 joint's zero again, for arms whose UFACTORY Studio has no Joint debug page (Studio before 2.4.0). The commands are
@@ -33,7 +34,7 @@ those of that page, sent through the xArm SDK:
     D13 I<joint>               the joint's present position becomes 0°              set_servo_zero(j)
 
 A command is sent only from the step that shows it, with the button Send this command; every command and the arm's
-answer go to joint_repair.csv. Robot = rehearsal sends nothing: a pretend xArm 7 with an S18 error answers."""
+answer go to joint_repair.csv. Robot = rehearsal sends nothing: a pretend arm with an S18 error answers."""
 import csv
 import signal
 import time
@@ -50,13 +51,13 @@ class Stop(Exception):
 
 
 class Rehearsal:
-    """A pretend xArm 7 with an S18 error (status 1) on one joint, answering like the SDK; nothing is sent anywhere."""
+    """A pretend xArm with an S18 error (status 1) on one joint, answering like the SDK; nothing is sent anywhere."""
 
-    def __init__(self, joint):
-        self.connected, self.axis, self.version, self.sn = True, 7, "rehearsal (no arm)", "-"
+    def __init__(self, joint, n=6):
+        self.connected, self.axis, self.version, self.sn = True, n, "rehearsal (no arm)", "-"
         self.state, self.mode, self.warn_code, self.error_code = 4, 0, 0, 11
-        self.true_q = [12.0, 0.0, 0.0, 30.0, 0.0, 20.0, 0.0]
-        self.offset = [0.0] * 7
+        self.true_q = [12.0, -10.0, -20.0, 30.0, 40.0, 20.0, 0.0][:n]
+        self.offset = [0.0] * n
         self.bad, self.code, self.status, self.unlocked, self.cleared = joint, 18, 1, None, False
         self.offset[joint - 1] = 7.5  # the zero moved: the case where it must be set again
 
@@ -68,7 +69,7 @@ class Rehearsal:
 
     def get_servo_angle(self, is_radian=False):
         if self.error_code:
-            return 0, [0.0] * 7  # in error the controller gives no angles
+            return 0, [0.0] * self.axis  # in error the controller gives no angles
         if self.unlocked:  # someone turns it by hand towards its true zero
             j = self.unlocked - 1
             self.true_q[j] += max(-3.0, min(3.0, -self.true_q[j] * 0.4))
@@ -76,7 +77,7 @@ class Rehearsal:
 
     def get_servo_debug_msg(self):
         out = []
-        for i in range(1, 8):
+        for i in range(1, 9):
             bad = i == self.bad and self.code
             out.append({"servo_id": i, "status": self.status if bad else 0, "code": self.code if bad else 0,
                         "title": "Multi-turn Encoder Error" if bad else "Normal", "desc": ""})
@@ -120,6 +121,7 @@ class Rehearsal:
 def run(ctx):
     p = ctx.params
     rehearsal = str(p.get("robot", "real xArm")).lower().startswith("rehears")
+    n_axes = 7 if "7" in str(p.get("arm", "xArm 6")) else 5 if "5" in str(p.get("arm", "")) else 6
     channel = str(p.get("channel") or "control")
     deadline = time.time() + float(p.get("minutes", 60)) * 60
     log = csv.writer(open(ctx.output("log", "joint_repair.csv"), "w", newline=""))
@@ -136,8 +138,8 @@ def run(ctx):
 
     # -- the arm -----------------------------------------------------------------------------------------------
     if rehearsal:
-        api = Rehearsal(int(p.get("rehearsal_joint", 1) or 1))
-        ctx.log("Rehearsal: nothing is sent to any arm. A pretend xArm 7 with an S18 error on joint %d answers." % api.bad)
+        api = Rehearsal(max(1, min(n_axes, int(p.get("rehearsal_joint", 1) or 1))), n_axes)
+        ctx.log("Rehearsal: nothing is sent to any arm. A pretend xArm %d with an S18 error on joint %d answers." % (n_axes, api.bad))
     else:
         from xarm.wrapper import XArmAPI
         ip = str(p.get("ip") or "").strip()
@@ -150,10 +152,8 @@ def run(ctx):
             raise RuntimeError("Cannot reach the xArm at %s: check the controller is on, the address, and that this machine is on the arm's network (ping %s)." % (ip, ip))
 
     def axes():
-        try:
-            return max(5, min(7, int(api.axis or 6)))
-        except Exception:
-            return 6
+        """The joints of the arm, from the setting Arm: older firmware (1.4) does not tell the SDK which arm it is."""
+        return n_axes
 
     def carries():
         """Joints that hold the arm up: unlocked, the arm falls."""
@@ -282,7 +282,7 @@ def run(ctx):
         if bad and bad[0][1] == 18:
             note = ("\nNote: joint %d reports S18 (multi-turn), status %d. Minna wrote V2. UFACTORY's article for S18 errors uses V256 instead, "
                     "and only when the status is 0 or 8 (otherwise it says to contact them). If you are not sure which, ask Minna before sending. "
-                    "Command below chooses V2 or V256." % (j, bad[0][2]))
+                    "Clear command below chooses V2 or V256." % (j, bad[0][2]))
         return ("Clear the encoder error",
                 "This sends the command that clears the error of joint %d:\n      %s\n"
                 "Nothing moves. Press Send this command.%s" % (j, command(), note), ("send",))
@@ -316,7 +316,7 @@ def run(ctx):
     def step_retry():
         return ("The error is still there",
                 "What you can do:\n"
-                "• Press Back to send the command again (you can change Command to V2 or V256 first), then the E-stop again.\n"
+                "• Press Back to send the command again (you can change Clear command to V2 or V256 first), then the E-stop again.\n"
                 "• Or press Finish and write to UFACTORY (support@ufactory.cc): the file joint_repair.csv in Results has every command and the arm's answers.",
                 ("back", "finish"))
 
@@ -441,7 +441,7 @@ def run(ctx):
     def step_done():
         return ("Finished",
                 "✓ The arm has no errors and joint %d's zero is right.\n"
-                "Press Finish to end. Then move the arm slowly once (UFACTORY Studio, or flow 0 · Robot test) to check." % joint(), ("finish",))
+                "Press Finish to end. Then move the arm slowly once with UFACTORY Studio to check it." % joint(), ("finish",))
 
     STEPS = {"read": (step_read, act_read), "mark": (step_mark, None), "send_clear": (step_send_clear, act_send_clear),
              "estop1": (step_estop1, act_estop1), "retry": (step_retry, None), "clear_arm": (step_clear_arm, act_clear_arm),
@@ -451,13 +451,30 @@ def run(ctx):
     NEXT = {"mark": "send_clear"}
     LABEL = {"done": "Done, next", "send": "Send this command", "yes": "Yes", "no": "No", "back": "Back", "finish": "Finish"}
 
-    def show():
+    CHOICES = {"read": ("joint",), "send_clear": ("command",), "retry": ("command",)}
+
+    def choices():
+        out = []
+        for c in CHOICES.get(W["step"], ()):
+            if c == "joint":
+                out.append({"name": "joint", "label": "Joint", "options": ["auto"] + [str(i) for i in range(1, axes() + 1)],
+                            "value": str(W["chosen"]) if W["chosen"] else "auto"})
+            else:
+                out.append({"name": "command", "label": "Clear command", "options": ["V2", "V256"], "value": "V%d" % W["value"]})
+        return out
+
+    def show(busy=None):
         title, text, takes = STEPS[W["step"]][0]()
         W["takes"] = takes
+        W["seq"] = W.get("seq", 0) + 1
         n = len(W["history"]) + 1
-        ctx.telemetry("guide", {"step": "Step %d · %s" % (n, title), "text": text, "joint": ("J%d" % joint()) if joint() else "not chosen",
-                                "press": "Press: " + " or ".join(LABEL[t] for t in takes), "last": W["last"] or "—", "command": command()})
-        ctx.log("[Step %d · %s] %s%s" % (n, title, (W["last"] + " ") if W["last"] else "", text.replace("\n", " ")))
+        ctx.telemetry("guide", {"seq": W["seq"], "step": "Step %d · %s" % (n, title), "text": text, "joint": ("J%d" % joint()) if joint() else "not chosen",
+                                "press": "Press: " + " or ".join(LABEL[t] for t in takes), "last": W["last"] or "—", "command": command(),
+                                "buttons": [{"label": LABEL[t], "kind": "send" if t == "send" else ""} for t in takes if t not in ("back", "finish")],
+                                "extra": [l for l in ("Back", "Start over", "Finish") if l != "Back" or W["history"]],
+                                "choices": choices(), "busy": busy})
+        if not busy:
+            ctx.log("[Step %d · %s] %s%s" % (n, title, (W["last"] + " ") if W["last"] else "", text.replace("\n", " ")))
 
     def go(step, remember=True):
         if remember and W["step"]:
@@ -485,12 +502,16 @@ def run(ctx):
             return
         W["last"] = ""
         act = STEPS[W["step"]][1]
+        if act and (b == "send" or W["step"].startswith("estop")):
+            show(busy="Working: talking to the arm… (after an E-stop this can take up to 20 seconds)")
         nxt = act(b) if act else NEXT.get(W["step"])
         if nxt:
             go(nxt)
         else:
             show()
 
+    for f in (ctx.inputs.get("robot") or []):
+        ctx.log("Robot model for the 3D view: %s" % f.name)
     go("read", remember=False)
 
     last_tick = 0.0
@@ -515,7 +536,8 @@ def run(ctx):
                 ensure()
                 snapshot()
     except Stop as e:
-        ctx.telemetry("guide", {"step": "Finished", "text": str(e) + " Every command sent is in joint_repair.csv (Results).", "press": "—", "last": W["last"] or "—"})
+        ctx.telemetry("guide", {"seq": W.get("seq", 0) + 1, "step": "Finished", "text": str(e) + " Every command sent is in joint_repair.csv (Results).", "press": "—",
+                                "last": W["last"] or "—", "buttons": [], "extra": [], "choices": []})
         ctx.log("Finished.")
     finally:
         try:
