@@ -69,6 +69,11 @@
             "name": "xArm joint repair"
         },
         {
+            "id": "ws-step-by-step-guide",
+            "version": 2,
+            "name": "Step-by-step guide"
+        },
+        {
             "id": "ws-board-sheet",
             "version": 2,
             "name": "Board sheet"

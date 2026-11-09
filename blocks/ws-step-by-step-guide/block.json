@@ -1,0 +1,59 @@
+{
+    "id": "ws-step-by-step-guide",
+    "version": "1",
+    "name": "Step-by-step guide",
+    "category": "Visualizers",
+    "icon": "list",
+    "side": "frontend",
+    "customizable": true,
+    "summary": "One step of a procedure that a running block leads: what to do, whether the last action worked (✓/✗), and only the buttons that step takes.",
+    "help": "For procedures a person does with a machine block guiding them (repairs, calibrations, set-ups). Connect a Telemetry block's stream (from the block that leads) to Data. The block sends its step with ctx.telemetry(\"guide\", {seq, step, text, last, buttons, extra, choices, busy}): seq grows with every item; step is the title; text the instruction (lines starting with 1. or • become a list; a line indented by 4 spaces shows as a command); last the result of the last action, starting with ✓ (green) or ✗ (red); buttons [{label, kind}] the step's buttons (kind send: orange, it sends a command to a device); extra small buttons under the step (Back, Start over, Finish); choices [{name, label, options, value}] drop-downs; busy a text while the block works (buttons off). A press sends {\"control\": label, \"value\": true} on the Channel (a choice: {\"control\": name, \"value\": option}); the view then says it waits until the next step comes. Facts: live values shown small under the step, one per line as CHANNEL.FIELD=Label.",
+    "inputs": [
+        {
+            "id": "data",
+            "label": "Data",
+            "type": "stream",
+            "many": true,
+            "optional": true,
+            "help": "The live stream of a Telemetry block reading the block that leads the procedure"
+        }
+    ],
+    "outputs": [],
+    "params": [
+        {
+            "key": "channel",
+            "label": "Channel",
+            "type": "text",
+            "default": "control",
+            "help": "The presses go to the running blocks on this channel"
+        },
+        {
+            "key": "to",
+            "label": "Only to the block",
+            "type": "text",
+            "default": "",
+            "help": "A block's id on the grid; empty = every running block"
+        },
+        {
+            "key": "guide_channel",
+            "label": "Guide channel",
+            "type": "text",
+            "default": "guide"
+        },
+        {
+            "key": "facts",
+            "label": "Facts",
+            "type": "textarea",
+            "default": "",
+            "help": "Live values under the step, one per line: CHANNEL.FIELD=Label"
+        }
+    ],
+    "view": {
+        "w": 6,
+        "h": 7,
+        "resize": "both"
+    },
+    "esasim": {
+        "version": 2
+    }
+}
