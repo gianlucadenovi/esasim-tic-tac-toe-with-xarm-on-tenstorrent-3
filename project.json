@@ -116,7 +116,7 @@
         },
         {
             "id": "ws-xarm-teach-and-repeat",
-            "version": 1,
+            "version": 2,
             "name": "xArm teach and repeat"
         }
     ]

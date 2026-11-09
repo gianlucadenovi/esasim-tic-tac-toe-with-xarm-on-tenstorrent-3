@@ -6,7 +6,7 @@
     "name": "6 · Teach by hand and repeat",
     "description": "Record moves the arm into manual mode: guide it by hand while the flow records. Stop ends the recording. Repeat plays it back N times at the chosen speed, then the arm returns to where it started.",
     "published_version": 1,
-    "updated": "2026-11-09 05:40:08",
+    "updated": "2026-11-09 05:46:36",
     "graph": {
         "nodes": [
             {
@@ -167,17 +167,17 @@
                     "x": 8,
                     "y": 0,
                     "w": 4,
-                    "h": 6
+                    "h": 13
                 },
                 "twin": {
                     "x": 0,
                     "y": 0,
                     "w": 8,
-                    "h": 17
+                    "h": 23
                 },
                 "joints": {
                     "x": 8,
-                    "y": 6,
+                    "y": 13,
                     "w": 4,
                     "h": 10
                 }

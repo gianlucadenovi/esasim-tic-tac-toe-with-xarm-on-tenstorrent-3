@@ -1,14 +1,14 @@
 # xArm teach and repeat
 
-Record a movement by moving the xArm by hand, then have it repeat the movement any number of times, slower or faster, and go back to where it started.
+Free the xArm and move it by hand, record a movement between two moments, repeat it any number of times as one smooth motion, then send the arm to its zero position.
 
-Teaching by hand for the xArm. In a Controls view: Record puts the arm in manual mode (it holds its own weight and you move it by hand; the payload set in UFACTORY Studio must match what is mounted, or the arm drifts) and records its joints about 50 times a second; Stop ends the recording (the arm holds where it is; still moments at both ends are trimmed and the hand's tremor smoothed). Repeat plays it back Repeats times: the arm first goes to the pose where the movement started (a joint move at Move speed), then follows the recorded joints in the same rhythm (servo mode, 100 commands a second), and at the end goes back to that start pose. The Speed slider (25 % to 150 %) plays it slower or faster, also while it plays; no joint ever goes faster than Max joint speed (where the recording is faster, the playback slows down there). Stop stops the arm at once in any phase; Go to start moves to the start pose; End finishes. Clear the space around the arm: the move to the start pose is a straight joint move. Every recording is saved as recording.csv (t, j1…jN in degrees); connect one to Recording to play it again in another run. Robot model (optional): connect the xArm model block, so the 3D view shows the arm. Robot = simulation sends nothing: a pretend hand moves a pretend arm. Controls (channel "control"): Record, Stop, slider repeats, Repeat, slider speed, Go to start, End. Live: status (text, detail, state, progress), joints.
+Teaching by hand for the xArm, from a Controls view. Start frees the arm (manual mode: it holds its own weight and you move it by hand; the payload set in UFACTORY Studio must match what is mounted, or it drifts). Record records the joints about 50 times a second from where the arm is at that moment; Stop recording ends the recording where the arm is then, and the arm holds still (the hand's tremor is smoothed; the first and last poses are kept as they were). Repeat plays the movement Repeats times as one continuous motion: a gentle transition takes the arm from where it is to the start of the movement, and between two repetitions another gentle transition joins the end of one to the start of the next (minimum jerk: starting and ending at rest, at most Move speed); after the last one the arm holds at the end of the movement. The Speed slider (25 % to 150 %) plays slower or faster, also while it plays; no joint ever goes faster than Max joint speed. End takes the arm gently to its zero position (every joint at 0°) and ends the session; pressed during a repeat, the arm stops first. Stop stops any motion at once (or locks the arm again when it is free). Transitions are straight joint moves: clear the space around the arm. Every recording is saved as recording.csv (t, j1…jN in degrees); connect one to Recording to play it in another run. Robot model (optional): connect the xArm model block, so the 3D view shows the arm. Robot = simulation sends nothing: a pretend hand moves a pretend arm. Controls (channel "control"): Start, Record, Stop recording, slider repeats, Repeat, slider speed, Stop, End. Live: status (text, detail, state), joints.
 
 An [EsaSim](https://esacode.com/) blueprint block: it runs on a machine, in Python (`backend.py`, `def run(ctx)`).
 
 | | |
 |---|---|
-| Block | `ws-xarm-teach-and-repeat` · version 1 |
+| Block | `ws-xarm-teach-and-repeat` · version 2 |
 | Workspace | Gianluca De Novi's workspace |
 | Author | Gianluca De Novi |
 | Runs on | Any machine |
@@ -24,8 +24,8 @@ An [EsaSim](https://esacode.com/) blueprint block: it runs on a machine, in Pyth
 
 | Port | Type | Description |
 |---|---|---|
-| `recording` Recording | Table (csv) | recording.csv: t (s) and the joint angles (degrees), smoothed and trimmed |
-| `log` Session log | Table (csv) | session.csv: recordings, repeats, speed changes, stops |
+| `recording` Recording | Table (csv) | recording.csv: t (s) and the joint angles (degrees), smoothed |
+| `log` Session log | Table (csv) | session.csv: start, recordings, repeats, speed changes, stops, end |
 
 ## Settings
 
@@ -36,8 +36,8 @@ An [EsaSim](https://esacode.com/) blueprint block: it runs on a machine, in Pyth
 | `ip` Arm IP address | text | `"192.168.1.200"` |  |
 | `repeats` Repeats | number | `3` | Also the repeats slider |
 | `speed` Speed (%) | number | `100` | Also the speed slider: 100 = as recorded |
-| `max_speed` Max joint speed (degrees/s) | number | `60` | No joint goes faster during a repeat |
-| `move_speed` Move speed (degrees/s) | number | `20` | Going to the start pose and back |
+| `max_speed` Max joint speed (degrees/s) | number | `60` | No joint goes faster while the arm plays |
+| `move_speed` Move speed (degrees/s) | number | `20` | The fastest joint during the gentle transitions (to the start, between repeats, to zero) |
 | `rate` Recording rate (per second) | number | `50` |  |
 | `max_seconds` Longest recording (s) | number | `120` |  |
 | `minutes` Longest session (minutes) | number | `60` |  |
