@@ -6,7 +6,7 @@
     "name": "0 · Play in simulation, the real arm following",
     "description": "Checks that the xArm answers and is healthy, then moves it one joint at a time, slowly, from the View: J1 − … J6 +, Back to start, Stop.",
     "published_version": 5,
-    "updated": "2026-11-09 06:28:11",
+    "updated": "2026-11-09 07:33:02",
     "graph": {
         "nodes": [
             {
@@ -207,8 +207,8 @@
             {
                 "id": "score",
                 "type": "gauge-view",
-                "x": 680,
-                "y": 1040,
+                "x": 820,
+                "y": 1060,
                 "params": {
                     "fields": "result.robot_wins,result.draws,result.visitor_wins,reading.accuracy",
                     "style": "number",
@@ -233,8 +233,8 @@
             {
                 "id": "pose",
                 "type": "chart",
-                "x": 948,
-                "y": 920,
+                "x": 980,
+                "y": 820,
                 "params": {
                     "kind": "line",
                     "y": "x,y,z",
@@ -454,6 +454,42 @@
                     "y": 12,
                     "w": 5,
                     "h": 6
+                },
+                "speak": {
+                    "x": 0,
+                    "y": 18,
+                    "w": 4,
+                    "h": 6
+                },
+                "camera": {
+                    "x": 4,
+                    "y": 18,
+                    "w": 6,
+                    "h": 8
+                },
+                "thinking": {
+                    "x": 0,
+                    "y": 26,
+                    "w": 5,
+                    "h": 8
+                },
+                "read": {
+                    "x": 5,
+                    "y": 26,
+                    "w": 5,
+                    "h": 8
+                },
+                "score": {
+                    "x": 0,
+                    "y": 34,
+                    "w": 4,
+                    "h": 5
+                },
+                "pose": {
+                    "x": 4,
+                    "y": 34,
+                    "w": 6,
+                    "h": 7
                 }
             }
         }

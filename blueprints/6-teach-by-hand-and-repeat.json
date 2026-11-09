@@ -5,8 +5,8 @@
     },
     "name": "6 · Teach by hand and repeat",
     "description": "Record moves the arm into manual mode: guide it by hand while the flow records. Stop ends the recording. Repeat plays it back N times at the chosen speed, then the arm returns to where it started.",
-    "published_version": 2,
-    "updated": "2026-11-09 05:54:24",
+    "published_version": 3,
+    "updated": "2026-11-09 14:25:14",
     "graph": {
         "nodes": [
             {
@@ -46,7 +46,7 @@
                 "x": 380,
                 "y": -60,
                 "params": {
-                    "interval": 0.2,
+                    "interval": 0.5,
                     "channels": "status,joints",
                     "keep": 5000
                 },
