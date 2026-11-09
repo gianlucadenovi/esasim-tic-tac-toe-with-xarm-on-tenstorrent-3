@@ -1,5 +1,5 @@
 # ── EsaSim block ──────────────────────────────────────────────────────
-# xArm joint repair (ws-xarm-joint-repair) · version 3 · machine block, Python: def run(ctx)
+# xArm joint repair (ws-xarm-joint-repair) · version 4 · machine block, Python: def run(ctx)
 # A wizard for UFACTORY's joint-encoder repair (S17, S18) and zero reset: one instruction at a time, a ✓ or ✗ after each, then the next step.
 # Workspace: Gianluca De Novi's workspace · Author: Gianluca De Novi
 # Saved: 2026-11-09
@@ -151,6 +151,20 @@ def run(ctx):
         if not api.connected:
             raise RuntimeError("Cannot reach the xArm at %s: check the controller is on, the address, and that this machine is on the arm's network (ping %s)." % (ip, ip))
 
+    def sdk(name):
+        """An SDK function: on XArmAPI itself, or on its inner arm for the debug functions (set_servo_addr_16,
+        set_servo_zero), which XArmAPI does not expose; its text commands (H101, H105) call the same ones."""
+        for obj in (api, getattr(api, "_arm", None)):
+            if obj is None:
+                continue
+            try:
+                f = getattr(obj, name)
+            except AttributeError:
+                continue
+            if callable(f):
+                return f
+        raise RuntimeError("the xArm SDK installed has no function %s" % name)
+
     def axes():
         """The joints of the arm, from the setting Arm: older firmware (1.4) does not tell the SDK which arm it is."""
         return n_axes
@@ -290,7 +304,7 @@ def run(ctx):
     def act_send_clear(b):
         j = joint()
         ensure(3)
-        code = api.set_servo_addr_16(servo_id=j, addr=ENCODER_REG, value=W["value"])
+        code = sdk("set_servo_addr_16")(servo_id=j, addr=ENCODER_REG, value=W["value"])
         record(command(), "set_servo_addr_16(%d, 0x0813, %d)" % (j, W["value"]), code)
         if code != 0:
             W["last"] = "✗ Sent %s: the arm answered code %s, it did not take it. Press Send this command to try again, or Finish and write to UFACTORY." % (command(), code)
@@ -384,7 +398,7 @@ def run(ctx):
     def act_unlock(b):
         j = joint()
         ensure(3)
-        code = api.set_servo_addr_16(servo_id=j, addr=UNLOCK_REG, value=1)
+        code = sdk("set_servo_addr_16")(servo_id=j, addr=UNLOCK_REG, value=1)
         record("H101 D0104 V1 I%d" % j, "set_servo_addr_16(%d, 0x0104, 1)" % j, code)
         if code != 0:
             W["last"] = "✗ The arm answered code %s: the joint may still be locked. Do not force it." % code
@@ -420,7 +434,7 @@ def run(ctx):
     def act_send_zero(b):
         j = joint()
         ensure(3)
-        code = api.set_servo_zero(servo_id=j)
+        code = sdk("set_servo_zero")(servo_id=j)
         record("D13 I%d" % j, "set_servo_zero(%d)" % j, code)
         if code != 0:
             W["last"] = "✗ The arm answered code %s: it did not take it." % code
@@ -504,14 +518,21 @@ def run(ctx):
         act = STEPS[W["step"]][1]
         if act and (b == "send" or W["step"].startswith("estop")):
             show(busy="Working: talking to the arm… (after an E-stop this can take up to 20 seconds)")
-        nxt = act(b) if act else NEXT.get(W["step"])
+        try:
+            nxt = act(b) if act else NEXT.get(W["step"])
+        except Exception as e:
+            ctx.log("Error at step %s: %r" % (W["step"], e))
+            record("error: %s" % e, "-", "-")
+            W["last"] = "✗ It did not work: %s. The run goes on: press the button again, or Finish and send the log." % e
+            nxt = None
         if nxt:
             go(nxt)
         else:
             show()
 
     for f in (ctx.inputs.get("robot") or []):
-        ctx.log("Robot model for the 3D view: %s" % f.name)
+        if f.name.endswith(".gz"):
+            ctx.log("Robot model for the 3D view: %s" % f.name)
     go("read", remember=False)
 
     last_tick = 0.0

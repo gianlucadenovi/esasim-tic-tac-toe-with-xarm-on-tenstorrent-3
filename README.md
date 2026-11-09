@@ -62,7 +62,7 @@ An [EsaSim](https://esacode.com/) project of the workspace Gianluca De Novi's wo
 
 - [xArm joint test](blocks/ws-xarm-joint-test) · version 3
 - [xArm model](blocks/ws-xarm-6-model) · version 2
-- [xArm joint repair](blocks/ws-xarm-joint-repair) · version 3
+- [xArm joint repair](blocks/ws-xarm-joint-repair) · version 4
 - [Step-by-step guide](blocks/ws-step-by-step-guide) · version 2
 - [Board sheet](blocks/ws-board-sheet) · version 2
 - [Simulate games](blocks/ws-simulate-games) · version 1
