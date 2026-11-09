@@ -24,7 +24,7 @@
         {
             "name": "2 · Train the board reader (simulation + rendered cells)",
             "file": "blueprints/2-train-the-board-reader-simulation-rendered-cells.json",
-            "published_version": 1,
+            "published_version": 2,
             "nodes": 14
         },
         {

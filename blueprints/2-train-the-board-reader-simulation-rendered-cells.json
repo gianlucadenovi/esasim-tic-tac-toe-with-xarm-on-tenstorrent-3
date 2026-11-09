@@ -5,7 +5,7 @@
     },
     "name": "2 · Train the board reader (simulation + rendered cells)",
     "description": "Synthetic cells into the cells-synthetic dataset, then a CNN that reads empty, X or O, trained on the accelerator; the model goes to the models dataset.",
-    "published_version": 1,
+    "published_version": 2,
     "updated": "2026-11-07 17:00:20",
     "graph": {
         "nodes": [
