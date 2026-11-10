@@ -18,7 +18,7 @@
         {
             "name": "0b · Repair a joint (encoder error, zero)",
             "file": "blueprints/0b-repair-a-joint-encoder-error-zero.json",
-            "published_version": 3,
+            "published_version": 4,
             "nodes": 6
         },
         {
