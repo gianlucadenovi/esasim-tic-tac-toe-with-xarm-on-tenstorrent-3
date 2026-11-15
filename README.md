@@ -74,4 +74,19 @@ An [EsaSim](https://esacode.com/) project of the workspace Gianluca De Novi's wo
 - [Read board](blocks/ws-read-board) · version 2
 - [xArm teach and repeat](blocks/ws-xarm-teach-and-repeat) · version 2
 
-Keys pasted in blocks (secret settings) are not saved here. Datasets, results and the team stay in EsaSim.
+### Assets
+
+The files the project's views draw with (3D models, textures, sounds), in [assets/](assets/):
+
+- [textures/esacode-logo.png](assets/textures/esacode-logo.png) · 25 KB
+
+### Files the blueprints make
+
+Kept with the project (listed in [esasim-files.json](esasim-files.json)), so it runs without making them again:
+
+- **cells-sim** · 25 files, 15 MB · made by 2 · Train the board reader (simulation + rendered cells): Simulate games (digital twin) · in [files/cells-sim.zip](files/cells-sim.zip)
+- **cells-synthetic** · 1 file, 26 MB · made by 2 · Train the board reader (simulation + rendered cells): Render cells · in the release `esasim-files` (cells-synthetic.zip)
+- **models** · 5 files, 619 KB · made by 2 · Train the board reader (simulation + rendered cells): Train cell reader, 3 · Train the player by self-play: Train player by self-play · in [files/models.zip](files/models.zip)
+- **cells-real** · 4 files, 1.2 MB · made by 5 · Play (simulation or the real xArm): Tic-tac-toe game · in [files/cells-real.zip](files/cells-real.zip)
+
+Keys pasted in blocks (secret settings) are not saved here, nor are the team and the results of runs.

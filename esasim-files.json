@@ -1,0 +1,126 @@
+{
+    "esasim": {
+        "kind": "files",
+        "version": 1
+    },
+    "release": "esasim-files",
+    "datasets": [
+        {
+            "name": "cells-sim",
+            "dataset_id": 7,
+            "root": "cells-sim",
+            "location": {
+                "id": 3,
+                "kind": "worker"
+            },
+            "made_by": [
+                "2 · Train the board reader (simulation + rendered cells): Simulate games (digital twin)"
+            ],
+            "version": 2,
+            "files": 25,
+            "bytes": 15522681,
+            "key": "d1698da079d044d5178ef39b9ea832ee681ca21daf0b86b17b2e34feca87a6e8",
+            "parts": [
+                {
+                    "zip": "files/cells-sim.zip",
+                    "size": 15259842,
+                    "sha256": "3eeaf08db17c233f60e09792df63c11daec9844e6fd976699973f776e45fa8bb",
+                    "files": 25,
+                    "in": "repo"
+                }
+            ],
+            "left_out": []
+        },
+        {
+            "name": "cells-synthetic",
+            "dataset_id": 8,
+            "root": "cells-synthetic",
+            "location": {
+                "id": 3,
+                "kind": "worker"
+            },
+            "made_by": [
+                "2 · Train the board reader (simulation + rendered cells): Render cells"
+            ],
+            "version": 2,
+            "files": 1,
+            "bytes": 26996439,
+            "key": "db43186eb2c5b9025e12e151512b23551f237aec1abd01e7fa63d4ae4e7f467f",
+            "parts": [
+                {
+                    "zip": "files/cells-synthetic.zip",
+                    "size": 27000780,
+                    "sha256": "b0edfbe69b4187c2423cc50be60fd9d889527f88c009868be4c44b6a6f8e78f1",
+                    "files": 1,
+                    "in": "release",
+                    "tag": "esasim-files",
+                    "asset": "cells-synthetic.zip"
+                }
+            ],
+            "left_out": []
+        },
+        {
+            "name": "models",
+            "dataset_id": 9,
+            "root": "models",
+            "location": {
+                "id": 3,
+                "kind": "worker"
+            },
+            "made_by": [
+                "2 · Train the board reader (simulation + rendered cells): Train cell reader",
+                "3 · Train the player by self-play: Train player by self-play"
+            ],
+            "version": 3,
+            "files": 5,
+            "bytes": 633673,
+            "key": "a1d15929d4e9a6c54f414a3adb663a358aedd79521a31f882999324f7116ddeb",
+            "parts": [
+                {
+                    "zip": "files/models.zip",
+                    "size": 601585,
+                    "sha256": "716c49a58432c5f43740846506196ba2ba86441ec01b1e9d827d61995810de50",
+                    "files": 5,
+                    "in": "repo"
+                }
+            ],
+            "left_out": []
+        },
+        {
+            "name": "cells-real",
+            "dataset_id": 10,
+            "root": "cells-real",
+            "location": {
+                "id": 3,
+                "kind": "worker"
+            },
+            "made_by": [
+                "5 · Play (simulation or the real xArm): Tic-tac-toe game"
+            ],
+            "version": 5,
+            "files": 4,
+            "bytes": 1230343,
+            "key": "9d4a7988bb7439373b4f6180f5a3a0fb1fbb51025fa902119c57de22bdecb084",
+            "parts": [
+                {
+                    "zip": "files/cells-real.zip",
+                    "size": 1227096,
+                    "sha256": "b38d6413280b69f080647f351fe8e77dbbd50c3a5e6e74092f551ebcb37d53db",
+                    "files": 4,
+                    "in": "repo"
+                }
+            ],
+            "left_out": []
+        }
+    ],
+    "assets": [
+        {
+            "path": "textures/esacode-logo.png",
+            "size": 25614,
+            "sha256": "5165bee68f3a011323761eb87cfae64a9f5076c092c6f27f2627a1a1820c1091",
+            "zip": "assets/textures/esacode-logo.png",
+            "in": "repo"
+        }
+    ],
+    "saved": "2026-11-15T06:48:30+00:00"
+}
