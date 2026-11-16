@@ -7,6 +7,8 @@
     "name": "Tic-tac-toe with xArm on Tenstorrent",
     "description": "Investor demo: the xArm plays tic-tac-toe on paper with a marker; the board reader and the player are trained during the meeting on the worker's accelerators.",
     "type": "robotics",
+    "cover": "upload",
+    "cover_file": "assets/cover.jpg",
     "readme": null,
     "blueprints": [
         {
