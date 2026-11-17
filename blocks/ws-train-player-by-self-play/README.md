@@ -4,14 +4,14 @@ A small value network (PyTorch) learns tic-tac-toe by playing thousands of games
 
 Games are played in batches side by side; after each move the network scores the position for the player who just moved, plays its best move (sometimes a random one, to explore) and learns from how games end and from its own look one move ahead. Tested as it learns against a random player, against the perfect player, and on every position of the game. Accelerator: NVIDIA GPU, Tenstorrent or CPU, as in Train cell reader (the one chosen is used, or the block stops and says why). Live: train (games, loss, explore, games_s, x_wins, o_wins, draws), eval (vs_random_win, vs_perfect_draw, vs_perfect_loss, optimal_moves), first_move (matrix: X's score for each first move). Writes model/player.pt for the game.
 
-An [EsaSim](https://esacode.com/) blueprint block: it runs on a machine, in Python (`backend.py`, `def run(ctx)`).
+An [EsaSim](https://esacode.com/) blueprint block: it runs on a worker, in Python (`backend.py`, `def run(ctx)`).
 
 | | |
 |---|---|
 | Block | `ws-train-player-by-self-play` · version 2 |
 | Workspace | Gianluca De Novi's workspace |
 | Author | Gianluca De Novi |
-| Runs on | Any machine, NVIDIA GPU, Tenstorrent |
+| Runs on | Any worker, NVIDIA GPU, Tenstorrent |
 
 ## Outputs
 

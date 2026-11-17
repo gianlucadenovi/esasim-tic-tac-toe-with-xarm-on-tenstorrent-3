@@ -4,14 +4,14 @@ Free the xArm and move it by hand, record a movement between two moments, repeat
 
 Teaching by hand for the xArm, from a Controls view. Start frees the arm (manual mode: it holds its own weight and you move it by hand; the payload set in UFACTORY Studio must match what is mounted, or it drifts). Record records the joints about 50 times a second from where the arm is at that moment; Stop recording ends the recording where the arm is then, and the arm holds still (the hand's tremor is smoothed; the first and last poses are kept as they were). Repeat plays the movement Repeats times as one continuous motion: a gentle transition takes the arm from where it is to the start of the movement, and between two repetitions another gentle transition joins the end of one to the start of the next (minimum jerk: starting and ending at rest, at most Move speed); after the last one the arm holds at the end of the movement. The Speed slider (25 % to 150 %) plays slower or faster, also while it plays; no joint ever goes faster than Max joint speed. End takes the arm gently to its zero position (every joint at 0°) and ends the session; pressed during a repeat, the arm stops first. Stop stops any motion at once (or locks the arm again when it is free). Transitions are straight joint moves: clear the space around the arm. Every recording is saved as recording.csv (t, j1…jN in degrees); connect one to Recording to play it in another run. Robot model (optional): connect the xArm model block, so the 3D view shows the arm. Robot = simulation sends nothing: a pretend hand moves a pretend arm. Controls (channel "control"): Start, Record, Stop recording, slider repeats, Repeat, slider speed, Stop, End. Live: status (text, detail, state), joints.
 
-An [EsaSim](https://esacode.com/) blueprint block: it runs on a machine, in Python (`backend.py`, `def run(ctx)`).
+An [EsaSim](https://esacode.com/) blueprint block: it runs on a worker, in Python (`backend.py`, `def run(ctx)`).
 
 | | |
 |---|---|
 | Block | `ws-xarm-teach-and-repeat` · version 2 |
 | Workspace | Gianluca De Novi's workspace |
 | Author | Gianluca De Novi |
-| Runs on | Any machine |
+| Runs on | Any worker |
 
 ## Inputs
 

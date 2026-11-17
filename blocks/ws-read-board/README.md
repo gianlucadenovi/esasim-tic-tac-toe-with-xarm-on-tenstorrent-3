@@ -4,14 +4,14 @@ Finds the printed board in a camera picture by its markers, straightens it, cuts
 
 Without Pictures it takes them with a camera of the machine (Camera: 0, 1 … or a device path or stream address). Connect the models (reader.pt) to read the cells: the log and the live picture show X, O or empty in each, with how sure the reader is. Without models it only checks that the board is found and straight: use it to place the camera and the light. Real cells read with the reader are saved as cells/real_cells_*.npz (same format as Render cells): check them before training on them. Live: board (straightened picture with the reading), camera (when the board is not found), read (matrix of confidences).
 
-An [EsaSim](https://esacode.com/) blueprint block: it runs on a machine, in Python (`backend.py`, `def run(ctx)`).
+An [EsaSim](https://esacode.com/) blueprint block: it runs on a worker, in Python (`backend.py`, `def run(ctx)`).
 
 | | |
 |---|---|
 | Block | `ws-read-board` · version 2 |
 | Workspace | Gianluca De Novi's workspace |
 | Author | Gianluca De Novi |
-| Runs on | Any machine |
+| Runs on | Any worker |
 
 ## Inputs
 

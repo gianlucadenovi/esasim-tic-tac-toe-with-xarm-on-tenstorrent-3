@@ -4,14 +4,14 @@ The xArm plays tic-tac-toe on paper against a visitor, in simulation (the digita
 
 Robot = simulation: the digital twin of the xArm 6 (UFACTORY's kinematics) draws with its pen on simulated paper, the simulated camera takes the pictures, and the visitor clicks a cell on the board in the Controls view (or a simulated visitor plays, Visitor = random or perfect): a simulated hand draws the mark and the game reads it with the camera and the board reader, so the whole chain runs and the reading is checked (live: reading). In simulation, the switch Real arm in the Controls view makes the real xArm at Arm IP address follow the digital twin: it first comes gently to the twin's pose (at most 20°/s), then receives the twin's joint angles as they are computed (every 20 ms); the twin's motions are all planned and checked before they run, so the real arm only follows checked motions; while it follows, the simulation runs no faster than real time, and any jump faster than 60°/s becomes a gentle catch-up move. Switched off, or on any error of the arm, the real arm holds where it is (live: mirror). Robot = real xArm: the arm at Arm IP address (its Python SDK, straight over the network) and the camera of the machine; the visitor draws and presses Your move, or clicks the cell. Who starts: by default the robot and the visitor take turns, the robot starting the first game; each keeps its mark. Safety: every motion is planned whole and checked on the digital twin before anything moves (tool point inside the safe box and away from the base, pen not into the table, elbow and wrist above it, joints within their limits, no sudden swing of a joint), then runs smoothly with speed and acceleration capped (pen at most 150 mm/s, joints at most 60°/s, whatever the settings); with the real arm, its controller is told the limits too (reduced mode, the safe box as a fence; older firmware may refuse some). The arm starts at its rest position, goes back there after each move and when the session ends. The board lies with its top towards the arm (rotation 90°), as the visitor sitting opposite reads it. Controls (channel "control"): cell N, Your move, New game, Stop, switch Real arm. Live: say, board, thinking, read, camera, paper, joints, pose, scene, limits, result, mirror.
 
-An [EsaSim](https://esacode.com/) blueprint block: it runs on a machine, in Python (`backend.py`, `def run(ctx)`).
+An [EsaSim](https://esacode.com/) blueprint block: it runs on a worker, in Python (`backend.py`, `def run(ctx)`).
 
 | | |
 |---|---|
 | Block | `ws-tic-tac-toe-game` · version 7 |
 | Workspace | Gianluca De Novi's workspace |
 | Author | Gianluca De Novi |
-| Runs on | Any machine |
+| Runs on | Any worker |
 
 ## Inputs
 

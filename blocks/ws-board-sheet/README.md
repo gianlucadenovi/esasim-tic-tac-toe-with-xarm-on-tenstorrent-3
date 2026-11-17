@@ -4,14 +4,14 @@ The printable tic-tac-toe board: four ArUco markers around a square, so a camera
 
 Print board-sheet.pdf on A4 at 100% (no scaling) and check the square with a ruler. The markers are ArUco 4x4 ids 0 (top left), 1 (top right), 2 (bottom right), 3 (bottom left); each touches the board with its inner corner. Use the same board size in the xArm and Tic-tac-toe game blocks. Board + 2 x marker must stay under 202 mm.
 
-An [EsaSim](https://esacode.com/) blueprint block: it runs on a machine, in Python (`backend.py`, `def run(ctx)`).
+An [EsaSim](https://esacode.com/) blueprint block: it runs on a worker, in Python (`backend.py`, `def run(ctx)`).
 
 | | |
 |---|---|
 | Block | `ws-board-sheet` · version 2 |
 | Workspace | Gianluca De Novi's workspace |
 | Author | Gianluca De Novi |
-| Runs on | Any machine |
+| Runs on | Any worker |
 
 ## Outputs
 

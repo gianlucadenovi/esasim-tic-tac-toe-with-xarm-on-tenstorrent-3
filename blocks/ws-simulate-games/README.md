@@ -4,14 +4,14 @@ Training data from the digital twin: simulated games on paper, seen by the simul
 
 In each simulated game the arm draws the grid and its marks (the strokes the real arm draws), a simulated visitor draws theirs by hand, and the simulated camera (on a stand above the table, or on the wrist) takes a picture after every move. Every picture goes through the same steps as a real game (markers found, board straightened, nine cells cut) and the game knows what is in each cell: labelled cells (sim_cells_01.npz, the format of Render cells) for Train cell reader. Paper, ink, pens, light, board position and camera position and lens change from game to game (Variety). Connect xArm 6 model so the arm appears in the pictures with its real shape. About 8 pictures per second on one CPU core; 200 games give about 15,000 cells. Use the same board, camera and pen settings as the game.
 
-An [EsaSim](https://esacode.com/) blueprint block: it runs on a machine, in Python (`backend.py`, `def run(ctx)`).
+An [EsaSim](https://esacode.com/) blueprint block: it runs on a worker, in Python (`backend.py`, `def run(ctx)`).
 
 | | |
 |---|---|
 | Block | `ws-simulate-games` · version 1 |
 | Workspace | Gianluca De Novi's workspace |
 | Author | Gianluca De Novi |
-| Runs on | Any machine |
+| Runs on | Any worker |
 
 ## Inputs
 
