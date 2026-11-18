@@ -42,6 +42,13 @@
             "in": "repo"
         },
         {
+            "path": "models/xarm6-esacode.robot.json",
+            "size": 1532948,
+            "sha256": "086c3c05a76df0506c9766e682ae30c7553b640b55a06bbd99aec6e50c1adbdd",
+            "zip": "assets/models/xarm6-esacode.robot.json",
+            "in": "repo"
+        },
+        {
             "path": "models/xarm6.robot.json.gz",
             "size": 225097,
             "sha256": "9351d2cbc1a6b587198e61d213aeae9bedd8d6cd94e325803aec5a22d8405e03",
@@ -56,5 +63,5 @@
             "in": "repo"
         }
     ],
-    "saved": "2026-11-18T23:42:53+00:00"
+    "saved": "2026-11-18T23:55:45+00:00"
 }
