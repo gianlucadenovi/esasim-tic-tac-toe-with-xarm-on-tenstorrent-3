@@ -1,0 +1,14 @@
+{
+  "kind": "esasim.ttt.player/1",
+  "arch": "mlp18",
+  "games": 60000,
+  "device": "NVIDIA NVIDIA GeForce RTX 3070",
+  "seconds": 50.2,
+  "games_s": 1195,
+  "vs_random_win": 0.955,
+  "vs_random_draw": 0.045,
+  "vs_random_loss": 0.0,
+  "vs_perfect_draw": 1.0,
+  "vs_perfect_loss": 0.0,
+  "optimal_moves": 0.9712
+}

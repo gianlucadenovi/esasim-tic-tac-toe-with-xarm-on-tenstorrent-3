@@ -1,0 +1,21 @@
+{
+  "kind": "esasim.ttt.reader/1",
+  "arch": "cnn32",
+  "classes": [
+    "empty",
+    "X",
+    "O"
+  ],
+  "size": 32,
+  "normalize": "per-picture mean/std+8",
+  "val_acc": 0.9996,
+  "epoch": 5,
+  "cells": 52005,
+  "trained_on": [
+    "sim_cells_01.npz",
+    "cells_01.npz"
+  ],
+  "device": "NVIDIA NVIDIA GeForce RTX 3070",
+  "seconds": 3.4,
+  "img_s": 82385
+}

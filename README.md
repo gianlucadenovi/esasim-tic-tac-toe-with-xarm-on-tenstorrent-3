@@ -78,5 +78,10 @@ An [EsaSim](https://esacode.com/) project of the workspace Gianluca De Novi's wo
 The files the project's views draw with (3D models, textures, sounds), in [assets/](assets/):
 
 - [textures/esacode-logo.png](assets/textures/esacode-logo.png) · 25 KB
+- [textures/models/player.json](assets/textures/models/player.json) · 326 B
+- [textures/models/player.pt](assets/textures/models/player.pt) · 47 KB
+- [textures/models/reader.json](assets/textures/models/reader.json) · 380 B
+- [textures/models/reader.pt](assets/textures/models/reader.pt) · 352 KB
+- [textures/models/xarm6.robot.json.gz](assets/textures/models/xarm6.robot.json.gz) · 220 KB
 
 Keys pasted in blocks (secret settings) are not saved here, nor are the team and the results of runs.
