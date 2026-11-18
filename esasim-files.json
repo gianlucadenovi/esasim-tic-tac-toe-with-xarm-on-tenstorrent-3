@@ -7,47 +7,47 @@
     "datasets": [],
     "assets": [
         {
+            "path": "models/player.json",
+            "size": 326,
+            "sha256": "f40d50a5b35a6541e45cf0a54c701dc3b26ebd12ebc6e67ab3e872222c55475f",
+            "zip": "assets/models/player.json",
+            "in": "repo"
+        },
+        {
+            "path": "models/player.pt",
+            "size": 47817,
+            "sha256": "4db6d1097604c823976e805548ec1907c25c7825a4715609100cb499bc545bce",
+            "zip": "assets/models/player.pt",
+            "in": "repo"
+        },
+        {
+            "path": "models/reader.json",
+            "size": 380,
+            "sha256": "880f7ea4d9cd85158403de31874cb9ae03d7ea2e382ef857442b3f9888eb8450",
+            "zip": "assets/models/reader.json",
+            "in": "repo"
+        },
+        {
+            "path": "models/reader.pt",
+            "size": 360053,
+            "sha256": "c2d1591d569fa212faad0bd1f7be93b18c97954b38f8abbe370f1b597450b9bb",
+            "zip": "assets/models/reader.pt",
+            "in": "repo"
+        },
+        {
+            "path": "models/xarm6.robot.json.gz",
+            "size": 225097,
+            "sha256": "9351d2cbc1a6b587198e61d213aeae9bedd8d6cd94e325803aec5a22d8405e03",
+            "zip": "assets/models/xarm6.robot.json.gz",
+            "in": "repo"
+        },
+        {
             "path": "textures/esacode-logo.png",
             "size": 25614,
             "sha256": "5165bee68f3a011323761eb87cfae64a9f5076c092c6f27f2627a1a1820c1091",
             "zip": "assets/textures/esacode-logo.png",
             "in": "repo"
-        },
-        {
-            "path": "textures/models/player.json",
-            "size": 326,
-            "sha256": "f40d50a5b35a6541e45cf0a54c701dc3b26ebd12ebc6e67ab3e872222c55475f",
-            "zip": "assets/textures/models/player.json",
-            "in": "repo"
-        },
-        {
-            "path": "textures/models/player.pt",
-            "size": 47817,
-            "sha256": "4db6d1097604c823976e805548ec1907c25c7825a4715609100cb499bc545bce",
-            "zip": "assets/textures/models/player.pt",
-            "in": "repo"
-        },
-        {
-            "path": "textures/models/reader.json",
-            "size": 380,
-            "sha256": "880f7ea4d9cd85158403de31874cb9ae03d7ea2e382ef857442b3f9888eb8450",
-            "zip": "assets/textures/models/reader.json",
-            "in": "repo"
-        },
-        {
-            "path": "textures/models/reader.pt",
-            "size": 360053,
-            "sha256": "c2d1591d569fa212faad0bd1f7be93b18c97954b38f8abbe370f1b597450b9bb",
-            "zip": "assets/textures/models/reader.pt",
-            "in": "repo"
-        },
-        {
-            "path": "textures/models/xarm6.robot.json.gz",
-            "size": 225097,
-            "sha256": "9351d2cbc1a6b587198e61d213aeae9bedd8d6cd94e325803aec5a22d8405e03",
-            "zip": "assets/textures/models/xarm6.robot.json.gz",
-            "in": "repo"
         }
     ],
-    "saved": "2026-11-18T23:40:51+00:00"
+    "saved": "2026-11-18T23:41:56+00:00"
 }
