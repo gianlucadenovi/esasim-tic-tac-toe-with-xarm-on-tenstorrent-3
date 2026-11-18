@@ -81,6 +81,7 @@ The files the project's views draw with (3D models, textures, sounds), in [asset
 - [models/player.pt](assets/models/player.pt) · 47 KB
 - [models/reader.json](assets/models/reader.json) · 380 B
 - [models/reader.pt](assets/models/reader.pt) · 352 KB
+- [models/robot-arm.glb](assets/models/robot-arm.glb) · 1.7 MB
 - [models/xarm6.robot.json.gz](assets/models/xarm6.robot.json.gz) · 220 KB
 - [textures/esacode-logo.png](assets/textures/esacode-logo.png) · 25 KB
 

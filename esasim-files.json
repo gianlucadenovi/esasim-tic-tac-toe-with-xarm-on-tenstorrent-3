@@ -35,6 +35,13 @@
             "in": "repo"
         },
         {
+            "path": "models/robot-arm.glb",
+            "size": 1823088,
+            "sha256": "b11b30b18dabd52df1ba62679772e8fae693356886c7886e5a4421ae945855ba",
+            "zip": "assets/models/robot-arm.glb",
+            "in": "repo"
+        },
+        {
             "path": "models/xarm6.robot.json.gz",
             "size": 225097,
             "sha256": "9351d2cbc1a6b587198e61d213aeae9bedd8d6cd94e325803aec5a22d8405e03",
@@ -49,5 +56,5 @@
             "in": "repo"
         }
     ],
-    "saved": "2026-11-18T23:41:56+00:00"
+    "saved": "2026-11-18T23:42:53+00:00"
 }
