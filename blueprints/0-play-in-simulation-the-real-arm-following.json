@@ -6,7 +6,7 @@
     "name": "0 · Play in simulation, the real arm following",
     "description": "Checks that the xArm answers and is healthy, then moves it one joint at a time, slowly, from the View: J1 − … J6 +, Back to start, Stop.",
     "published_version": 7,
-    "updated": "2026-11-18 23:40:02",
+    "updated": "2026-11-18 23:56:06",
     "graph": {
         "nodes": [
             {

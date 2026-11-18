@@ -6,7 +6,7 @@
     "name": "3 · Train the player by self-play",
     "description": "Thousands of games against itself on the accelerator, tested against a random and a perfect player as it learns; the model goes to the models dataset.",
     "published_version": 2,
-    "updated": "2026-11-18 23:37:08",
+    "updated": "2026-11-18 23:57:47",
     "graph": {
         "nodes": [
             {
