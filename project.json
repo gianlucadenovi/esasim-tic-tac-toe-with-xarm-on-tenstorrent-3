@@ -14,7 +14,7 @@
         {
             "name": "0 · Play in simulation, the real arm following",
             "file": "blueprints/0-play-in-simulation-the-real-arm-following.json",
-            "published_version": 6,
+            "published_version": 7,
             "nodes": 17
         },
         {
@@ -50,7 +50,7 @@
         {
             "name": "5 · Play (simulation or the real xArm)",
             "file": "blueprints/5-play-simulation-or-the-real-xarm.json",
-            "published_version": 6,
+            "published_version": 7,
             "nodes": 18
         },
         {
