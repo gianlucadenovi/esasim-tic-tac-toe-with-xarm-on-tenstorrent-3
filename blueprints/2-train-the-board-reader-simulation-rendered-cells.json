@@ -5,8 +5,8 @@
     },
     "name": "2 · Train the board reader (simulation + rendered cells)",
     "description": "Synthetic cells into the cells-synthetic dataset, then a CNN that reads empty, X or O, trained on the accelerator; the model goes to the models dataset.",
-    "published_version": 2,
-    "updated": "2026-11-07 17:00:20",
+    "published_version": 3,
+    "updated": "2026-11-18 23:37:08",
     "graph": {
         "nodes": [
             {
@@ -40,18 +40,7 @@
                     "save_frames": 24,
                     "seed": 1
                 },
-                "title": "Simulate games (digital twin)",
-                "dest": {
-                    "location": 3,
-                    "name": "cells-sim",
-                    "folder": "cells-sim",
-                    "live": true,
-                    "move": false,
-                    "ports": [
-                        "cells",
-                        "frames"
-                    ]
-                }
+                "title": "Simulate games (digital twin)"
             },
             {
                 "id": "render",
@@ -63,17 +52,7 @@
                     "size": 32,
                     "seed": 1
                 },
-                "title": "Render cells",
-                "dest": {
-                    "location": 3,
-                    "name": "cells-synthetic",
-                    "folder": "cells-synthetic",
-                    "live": true,
-                    "move": false,
-                    "ports": [
-                        "cells"
-                    ]
-                }
+                "title": "Render cells"
             },
             {
                 "id": "train",
@@ -85,17 +64,7 @@
                     "epochs": 6,
                     "batch": 256
                 },
-                "title": "Train cell reader",
-                "dest": {
-                    "location": 3,
-                    "name": "models",
-                    "folder": "models",
-                    "live": true,
-                    "move": false,
-                    "ports": [
-                        "model"
-                    ]
-                }
+                "title": "Train cell reader"
             },
             {
                 "id": "sim_camera",

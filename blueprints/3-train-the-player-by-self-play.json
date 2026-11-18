@@ -5,8 +5,8 @@
     },
     "name": "3 · Train the player by self-play",
     "description": "Thousands of games against itself on the accelerator, tested against a random and a perfect player as it learns; the model goes to the models dataset.",
-    "published_version": 1,
-    "updated": "2026-11-07 15:32:40",
+    "published_version": 2,
+    "updated": "2026-11-18 23:37:08",
     "graph": {
         "nodes": [
             {
@@ -20,17 +20,7 @@
                     "parallel": 256,
                     "eval_every": 4000
                 },
-                "title": "Train player by self-play",
-                "dest": {
-                    "location": 3,
-                    "name": "models",
-                    "folder": "models",
-                    "live": true,
-                    "move": false,
-                    "ports": [
-                        "model"
-                    ]
-                }
+                "title": "Train player by self-play"
             },
             {
                 "id": "skill",

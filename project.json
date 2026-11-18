@@ -32,13 +32,13 @@
         {
             "name": "2 · Train the board reader (simulation + rendered cells)",
             "file": "blueprints/2-train-the-board-reader-simulation-rendered-cells.json",
-            "published_version": 2,
+            "published_version": 3,
             "nodes": 14
         },
         {
             "name": "3 · Train the player by self-play",
             "file": "blueprints/3-train-the-player-by-self-play.json",
-            "published_version": 1,
+            "published_version": 2,
             "nodes": 6
         },
         {
@@ -50,7 +50,7 @@
         {
             "name": "5 · Play (simulation or the real xArm)",
             "file": "blueprints/5-play-simulation-or-the-real-xarm.json",
-            "published_version": 5,
+            "published_version": 6,
             "nodes": 18
         },
         {

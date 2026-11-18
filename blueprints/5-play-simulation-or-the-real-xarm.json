@@ -5,8 +5,8 @@
     },
     "name": "5 · Play (simulation or the real xArm)",
     "description": "The robot plays the visitor: camera and board reader see the visitor's moves, the player network chooses the robot's, the arm draws. Your move, New game and Stop are in the View.",
-    "published_version": 5,
-    "updated": "2026-11-09 18:24:41",
+    "published_version": 6,
+    "updated": "2026-11-18 23:37:08",
     "graph": {
         "nodes": [
             {
@@ -69,17 +69,7 @@
                     "joint_accel": 80,
                     "safe_box": "100,600, -350,350, 20,450"
                 },
-                "title": "Tic-tac-toe game",
-                "dest": {
-                    "location": 3,
-                    "name": "cells-real",
-                    "folder": "cells-real",
-                    "live": true,
-                    "move": false,
-                    "ports": [
-                        "cells"
-                    ]
-                }
+                "title": "Tic-tac-toe game"
             },
             {
                 "id": "controls",
