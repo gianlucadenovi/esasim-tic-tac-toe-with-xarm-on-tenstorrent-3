@@ -14,13 +14,13 @@
         {
             "name": "0 · Play in simulation, the real arm following",
             "file": "blueprints/0-play-in-simulation-the-real-arm-following.json",
-            "published_version": 7,
+            "published_version": 8,
             "nodes": 17
         },
         {
             "name": "0b · Repair a joint (encoder error, zero)",
             "file": "blueprints/0b-repair-a-joint-encoder-error-zero.json",
-            "published_version": 4,
+            "published_version": 5,
             "nodes": 6
         },
         {
@@ -50,22 +50,17 @@
         {
             "name": "5 · Play (simulation or the real xArm)",
             "file": "blueprints/5-play-simulation-or-the-real-xarm.json",
-            "published_version": 7,
+            "published_version": 8,
             "nodes": 18
         },
         {
             "name": "6 · Teach by hand and repeat",
             "file": "blueprints/6-teach-by-hand-and-repeat.json",
-            "published_version": 3,
+            "published_version": 5,
             "nodes": 6
         }
     ],
     "blocks": [
-        {
-            "id": "ws-xarm-6-model",
-            "version": 2,
-            "name": "xArm model"
-        },
         {
             "id": "ws-tic-tac-toe-game",
             "version": 7,
@@ -85,6 +80,11 @@
             "id": "ws-board-sheet",
             "version": 2,
             "name": "Board sheet"
+        },
+        {
+            "id": "ws-xarm-6-model",
+            "version": 2,
+            "name": "xArm model"
         },
         {
             "id": "ws-simulate-games",

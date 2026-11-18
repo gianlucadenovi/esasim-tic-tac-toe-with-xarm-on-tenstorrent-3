@@ -5,15 +5,15 @@
     },
     "name": "6 · Teach by hand and repeat",
     "description": "Record moves the arm into manual mode: guide it by hand while the flow records. Stop ends the recording. Repeat plays it back N times at the chosen speed, then the arm returns to where it started.",
-    "published_version": 3,
-    "updated": "2026-11-18 23:58:32",
+    "published_version": 5,
+    "updated": "2026-11-18 23:59:09",
     "graph": {
         "nodes": [
             {
                 "id": "arm_model",
                 "type": "project-assets",
-                "x": -380,
-                "y": 160,
+                "x": 380,
+                "y": 180,
                 "params": {
                     "files": "assets/models/xarm6-esacode.robot.json"
                 },
@@ -22,8 +22,8 @@
             {
                 "id": "teach",
                 "type": "ws-xarm-teach-and-repeat",
-                "x": 0,
-                "y": 160,
+                "x": -200,
+                "y": 118,
                 "params": {
                     "robot": "real xArm",
                     "arm": "xArm 6",
@@ -55,7 +55,7 @@
                 "id": "controls",
                 "type": "controls-view",
                 "x": 760,
-                "y": -260,
+                "y": -238,
                 "params": {
                     "controls": "show status.text\nshow status.detail\nbutton Start\nbutton Record\nbutton Stop recording\nslider repeats 1 20 3\nbutton Repeat\nslider speed 25 150 100\nbutton Stop\nbutton End",
                     "channel": "control",
@@ -67,7 +67,7 @@
                 "id": "twin",
                 "type": "viewer-3d",
                 "x": 760,
-                "y": 300,
+                "y": 151,
                 "params": {
                     "environment": "studio",
                     "quality": "high",
@@ -80,7 +80,7 @@
                 "id": "joints",
                 "type": "chart",
                 "x": 380,
-                "y": 620,
+                "y": 400,
                 "params": {
                     "kind": "line",
                     "y": "j1,j2,j3,j4,j5,j6",

@@ -30,7 +30,7 @@
 ## What you need
 
 - A computer with the EsaSim worker (Project > Compute); it runs on any worker, faster with: NVIDIA GPU, Tenstorrent.
-- Python packages, installed by the worker the first time: `numpy`, `opencv-python-headless>=4.7`, `torch`, `xarm-python-sdk`, `pillow`.
+- Python packages, installed by the worker the first time: `opencv-python-headless>=4.7`, `numpy`, `torch`, `xarm-python-sdk`, `pillow`.
 
 ## How to run it
 
@@ -40,7 +40,7 @@
 
 ## What you get
 
-- On the **View** page: *models (reader.pt, player.pt)* (0 · Play in simulation, the real arm following), *Visitor* (0 · Play in simulation, the real arm following), *What the robot says* (0 · Play in simulation, the real arm following), *Robot voice* (0 · Play in simulation, the real arm following), *Camera pictures* (0 · Play in simulation, the real arm following), *The board as the robot reads it* (0 · Play in simulation, the real arm following), *Robot data for the 3D view* (0 · Play in simulation, the real arm following), *xArm 3D view (digital twin)* (0 · Play in simulation, the real arm following), *Thinking* (0 · Play in simulation, the real arm following), *The network's score for each free cell* (0 · Play in simulation, the real arm following), *Reading* (0 · Play in simulation, the real arm following), *How sure the reader is of each cell* (0 · Play in simulation, the real arm following).
+- On the **View** page: *models (reader.pt, player.pt)* (0 · Play in simulation, the real arm following), *xArm 6 model (esacode)* (0 · Play in simulation, the real arm following), *Visitor* (0 · Play in simulation, the real arm following), *What the robot says* (0 · Play in simulation, the real arm following), *Robot voice* (0 · Play in simulation, the real arm following), *Camera pictures* (0 · Play in simulation, the real arm following), *The board as the robot reads it* (0 · Play in simulation, the real arm following), *Robot data for the 3D view* (0 · Play in simulation, the real arm following), *xArm 3D view (digital twin)* (0 · Play in simulation, the real arm following), *Thinking* (0 · Play in simulation, the real arm following), *The network's score for each free cell* (0 · Play in simulation, the real arm following), *Reading* (0 · Play in simulation, the real arm following).
 
 <!-- esasim: files of the project -->
 
@@ -50,22 +50,22 @@ An [EsaSim](https://esacode.com/) project of the workspace Gianluca De Novi's wo
 
 ### Blueprints in this repository
 
-- [0 · Play in simulation, the real arm following](blueprints/0-play-in-simulation-the-real-arm-following.json) · 17 blocks · version 7
-- [0b · Repair a joint (encoder error, zero)](blueprints/0b-repair-a-joint-encoder-error-zero.json) · 6 blocks · version 4
+- [0 · Play in simulation, the real arm following](blueprints/0-play-in-simulation-the-real-arm-following.json) · 17 blocks · version 8
+- [0b · Repair a joint (encoder error, zero)](blueprints/0b-repair-a-joint-encoder-error-zero.json) · 6 blocks · version 5
 - [1 · Print the board](blueprints/1-print-the-board.json) · 2 blocks
 - [2 · Train the board reader (simulation + rendered cells)](blueprints/2-train-the-board-reader-simulation-rendered-cells.json) · 14 blocks · version 3
 - [3 · Train the player by self-play](blueprints/3-train-the-player-by-self-play.json) · 6 blocks · version 2
 - [4 · Calibrate the arm and the camera](blueprints/4-calibrate-the-arm-and-the-camera.json) · 8 blocks
-- [5 · Play (simulation or the real xArm)](blueprints/5-play-simulation-or-the-real-xarm.json) · 18 blocks · version 7
-- [6 · Teach by hand and repeat](blueprints/6-teach-by-hand-and-repeat.json) · 6 blocks · version 3
+- [5 · Play (simulation or the real xArm)](blueprints/5-play-simulation-or-the-real-xarm.json) · 18 blocks · version 8
+- [6 · Teach by hand and repeat](blueprints/6-teach-by-hand-and-repeat.json) · 6 blocks · version 5
 
 ### Workspace blocks it uses
 
-- [xArm model](blocks/ws-xarm-6-model) · version 2
 - [Tic-tac-toe game](blocks/ws-tic-tac-toe-game) · version 7
 - [xArm joint repair](blocks/ws-xarm-joint-repair) · version 5
 - [Step-by-step guide](blocks/ws-step-by-step-guide) · version 2
 - [Board sheet](blocks/ws-board-sheet) · version 2
+- [xArm model](blocks/ws-xarm-6-model) · version 2
 - [Simulate games](blocks/ws-simulate-games) · version 1
 - [Render cells](blocks/ws-render-cells) · version 1
 - [Train cell reader](blocks/ws-train-cell-reader) · version 2

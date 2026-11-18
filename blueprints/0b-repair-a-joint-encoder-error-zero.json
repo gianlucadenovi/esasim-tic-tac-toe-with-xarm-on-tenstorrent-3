@@ -5,20 +5,19 @@
     },
     "name": "0b · Repair a joint (encoder error, zero)",
     "description": "UFACTORY's procedure for a joint's S17/S18 encoder error and its zero, step by step with buttons, for an arm without Studio's Joint debug page. Starts in rehearsal: set Robot to real xArm when ready.",
-    "published_version": 4,
-    "updated": "2026-11-10 15:32:44",
+    "published_version": 5,
+    "updated": "2026-11-18 23:59:14",
     "graph": {
         "nodes": [
             {
                 "id": "arm_model",
-                "type": "ws-xarm-6-model",
+                "type": "project-assets",
                 "x": -380,
                 "y": 160,
                 "params": {
-                    "arm": "xArm 6",
-                    "detail": 1
+                    "files": "assets/models/xarm6-esacode.robot.json"
                 },
-                "title": "xArm 6 model"
+                "title": "xArm 6 model (esacode)"
             },
             {
                 "id": "repair",
@@ -90,21 +89,10 @@
         ],
         "edges": [
             {
-                "id": "arm_model.model>repair.robot",
+                "id": "arm_model.files>twin.scene",
                 "from": {
                     "node": "arm_model",
-                    "port": "model"
-                },
-                "to": {
-                    "node": "repair",
-                    "port": "robot"
-                }
-            },
-            {
-                "id": "arm_model.model>twin.scene",
-                "from": {
-                    "node": "arm_model",
-                    "port": "model"
+                    "port": "files"
                 },
                 "to": {
                     "node": "twin",

@@ -5,8 +5,8 @@
     },
     "name": "0 · Play in simulation, the real arm following",
     "description": "Checks that the xArm answers and is healthy, then moves it one joint at a time, slowly, from the View: J1 − … J6 +, Back to start, Stop.",
-    "published_version": 7,
-    "updated": "2026-11-18 23:56:06",
+    "published_version": 8,
+    "updated": "2026-11-18 23:58:46",
     "graph": {
         "nodes": [
             {
@@ -21,14 +21,13 @@
             },
             {
                 "id": "arm_model",
-                "type": "ws-xarm-6-model",
+                "type": "project-assets",
                 "x": -300,
                 "y": 448,
                 "params": {
-                    "arm": "xArm 6",
-                    "detail": 1
+                    "files": "assets/models/xarm6-esacode.robot.json"
                 },
-                "title": "xArm 6 model"
+                "title": "xArm 6 model (esacode)"
             },
             {
                 "id": "game",
@@ -256,10 +255,10 @@
                 }
             },
             {
-                "id": "arm_model.model>game.robot",
+                "id": "arm_model.files>game.robot",
                 "from": {
                     "node": "arm_model",
-                    "port": "model"
+                    "port": "files"
                 },
                 "to": {
                     "node": "game",
@@ -267,10 +266,10 @@
                 }
             },
             {
-                "id": "arm_model.model>twin.scene",
+                "id": "arm_model.files>twin.scene",
                 "from": {
                     "node": "arm_model",
-                    "port": "model"
+                    "port": "files"
                 },
                 "to": {
                     "node": "twin",
