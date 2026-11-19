@@ -49,13 +49,6 @@
             "in": "repo"
         },
         {
-            "path": "models/xarm6.robot.json.gz",
-            "size": 225097,
-            "sha256": "9351d2cbc1a6b587198e61d213aeae9bedd8d6cd94e325803aec5a22d8405e03",
-            "zip": "assets/models/xarm6.robot.json.gz",
-            "in": "repo"
-        },
-        {
             "path": "textures/esacode-logo.png",
             "size": 25614,
             "sha256": "5165bee68f3a011323761eb87cfae64a9f5076c092c6f27f2627a1a1820c1091",
@@ -63,5 +56,5 @@
             "in": "repo"
         }
     ],
-    "saved": "2026-11-18T23:55:45+00:00"
+    "saved": "2026-11-19T00:09:12+00:00"
 }
