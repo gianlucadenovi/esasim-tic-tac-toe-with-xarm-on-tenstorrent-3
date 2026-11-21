@@ -36,12 +36,6 @@
             "nodes": 14
         },
         {
-            "name": "5 · Play (simulation or the real xArm)",
-            "file": "blueprints/5-play-simulation-or-the-real-xarm.json",
-            "published_version": 8,
-            "nodes": 18
-        },
-        {
             "name": "5 · Train the player by self-play",
             "file": "blueprints/5-train-the-player-by-self-play.json",
             "published_version": 2,
@@ -54,8 +48,14 @@
             "nodes": 8
         },
         {
-            "name": "6 · Teach by hand and repeat",
-            "file": "blueprints/6-teach-by-hand-and-repeat.json",
+            "name": "7 · Play (simulation or the real xArm)",
+            "file": "blueprints/7-play-simulation-or-the-real-xarm.json",
+            "published_version": 8,
+            "nodes": 18
+        },
+        {
+            "name": "8 · Teach by hand and repeat",
+            "file": "blueprints/8-teach-by-hand-and-repeat.json",
             "published_version": 5,
             "nodes": 6
         }

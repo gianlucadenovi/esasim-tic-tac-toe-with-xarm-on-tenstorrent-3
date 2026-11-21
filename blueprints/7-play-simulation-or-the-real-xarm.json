@@ -3,10 +3,10 @@
         "kind": "blueprint",
         "flow_id": 8
     },
-    "name": "5 · Play (simulation or the real xArm)",
+    "name": "7 · Play (simulation or the real xArm)",
     "description": "The robot plays the visitor: camera and board reader see the visitor's moves, the player network chooses the robot's, the arm draws. Your move, New game and Stop are in the View.",
     "published_version": 8,
-    "updated": "2026-11-18 23:59:05",
+    "updated": "2026-11-21 19:35:19",
     "graph": {
         "nodes": [
             {

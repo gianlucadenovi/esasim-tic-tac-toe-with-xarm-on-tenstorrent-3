@@ -22,10 +22,10 @@
 - **2 · Repair a joint (encoder error, zero)**: UFACTORY's procedure for a joint's S17/S18 encoder error and its zero, step by step with buttons, for an arm without Studio's Joint debug page. Starts in rehearsal: set Robot to real xArm when ready.
 - **3 · Print the board**: The A4 sheet with the four markers the camera finds the board by. Print it at 100%.
 - **4 · Train the board reader (simulation + rendered cells)**: Synthetic cells into the cells-synthetic dataset, then a CNN that reads empty, X or O, trained on the accelerator; the model goes to the models dataset.
-- **5 · Play (simulation or the real xArm)**: The robot plays the visitor: camera and board reader see the visitor's moves, the player network chooses the robot's, the arm draws. Your move, New game and Stop are in the View.
 - **5 · Train the player by self-play**: Thousands of games against itself on the accelerator, tested against a random and a perfect player as it learns; the model goes to the models dataset.
 - **6 · Calibrate the arm and the camera**: The pen touches the board's four corners (dry run first), and the camera checks it finds and straightens the board.
-- **6 · Teach by hand and repeat**: Record moves the arm into manual mode: guide it by hand while the flow records. Stop ends the recording. Repeat plays it back N times at the chosen speed, then the arm returns to where it started.
+- **7 · Play (simulation or the real xArm)**: The robot plays the visitor: camera and board reader see the visitor's moves, the player network chooses the robot's, the arm draws. Your move, New game and Stop are in the View.
+- **8 · Teach by hand and repeat**: Record moves the arm into manual mode: guide it by hand while the flow records. Stop ends the recording. Repeat plays it back N times at the chosen speed, then the arm returns to where it started.
 
 ## What you need
 
@@ -54,10 +54,10 @@ An [EsaSim](https://esacode.com/) project of the workspace Gianluca De Novi's wo
 - [2 · Repair a joint (encoder error, zero)](blueprints/2-repair-a-joint-encoder-error-zero.json) · 6 blocks · version 5
 - [3 · Print the board](blueprints/3-print-the-board.json) · 2 blocks
 - [4 · Train the board reader (simulation + rendered cells)](blueprints/4-train-the-board-reader-simulation-rendered-cells.json) · 14 blocks · version 3
-- [5 · Play (simulation or the real xArm)](blueprints/5-play-simulation-or-the-real-xarm.json) · 18 blocks · version 8
 - [5 · Train the player by self-play](blueprints/5-train-the-player-by-self-play.json) · 6 blocks · version 2
 - [6 · Calibrate the arm and the camera](blueprints/6-calibrate-the-arm-and-the-camera.json) · 8 blocks
-- [6 · Teach by hand and repeat](blueprints/6-teach-by-hand-and-repeat.json) · 6 blocks · version 5
+- [7 · Play (simulation or the real xArm)](blueprints/7-play-simulation-or-the-real-xarm.json) · 18 blocks · version 8
+- [8 · Teach by hand and repeat](blueprints/8-teach-by-hand-and-repeat.json) · 6 blocks · version 5
 
 ### Workspace blocks it uses
 

@@ -3,10 +3,10 @@
         "kind": "blueprint",
         "flow_id": 24
     },
-    "name": "6 · Teach by hand and repeat",
+    "name": "8 · Teach by hand and repeat",
     "description": "Record moves the arm into manual mode: guide it by hand while the flow records. Stop ends the recording. Repeat plays it back N times at the chosen speed, then the arm returns to where it started.",
     "published_version": 5,
-    "updated": "2026-11-19 00:07:17",
+    "updated": "2026-11-21 19:35:27",
     "graph": {
         "nodes": [
             {
