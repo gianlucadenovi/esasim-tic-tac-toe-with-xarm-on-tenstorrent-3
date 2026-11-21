@@ -3,10 +3,10 @@
         "kind": "blueprint",
         "flow_id": 7
     },
-    "name": "4 · Calibrate the arm and the camera",
+    "name": "6 · Calibrate the arm and the camera",
     "description": "The pen touches the board's four corners (dry run first), and the camera checks it finds and straightens the board.",
     "published_version": 0,
-    "updated": "2026-11-07 21:28:55",
+    "updated": "2026-11-21 19:35:00",
     "graph": {
         "nodes": [
             {

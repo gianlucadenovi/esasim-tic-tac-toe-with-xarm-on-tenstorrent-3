@@ -24,34 +24,34 @@
             "nodes": 6
         },
         {
-            "name": "2 · Train the board reader (simulation + rendered cells)",
-            "file": "blueprints/2-train-the-board-reader-simulation-rendered-cells.json",
-            "published_version": 3,
-            "nodes": 14
-        },
-        {
             "name": "3 · Print the board",
             "file": "blueprints/3-print-the-board.json",
             "published_version": 0,
             "nodes": 2
         },
         {
-            "name": "3 · Train the player by self-play",
-            "file": "blueprints/3-train-the-player-by-self-play.json",
-            "published_version": 2,
-            "nodes": 6
-        },
-        {
-            "name": "4 · Calibrate the arm and the camera",
-            "file": "blueprints/4-calibrate-the-arm-and-the-camera.json",
-            "published_version": 0,
-            "nodes": 8
+            "name": "4 · Train the board reader (simulation + rendered cells)",
+            "file": "blueprints/4-train-the-board-reader-simulation-rendered-cells.json",
+            "published_version": 3,
+            "nodes": 14
         },
         {
             "name": "5 · Play (simulation or the real xArm)",
             "file": "blueprints/5-play-simulation-or-the-real-xarm.json",
             "published_version": 8,
             "nodes": 18
+        },
+        {
+            "name": "5 · Train the player by self-play",
+            "file": "blueprints/5-train-the-player-by-self-play.json",
+            "published_version": 2,
+            "nodes": 6
+        },
+        {
+            "name": "6 · Calibrate the arm and the camera",
+            "file": "blueprints/6-calibrate-the-arm-and-the-camera.json",
+            "published_version": 0,
+            "nodes": 8
         },
         {
             "name": "6 · Teach by hand and repeat",
@@ -77,6 +77,11 @@
             "name": "Step-by-step guide"
         },
         {
+            "id": "ws-board-sheet",
+            "version": 2,
+            "name": "Board sheet"
+        },
+        {
             "id": "ws-xarm-6-model",
             "version": 2,
             "name": "xArm model"
@@ -95,11 +100,6 @@
             "id": "ws-train-cell-reader",
             "version": 2,
             "name": "Train cell reader"
-        },
-        {
-            "id": "ws-board-sheet",
-            "version": 2,
-            "name": "Board sheet"
         },
         {
             "id": "ws-train-player-by-self-play",
