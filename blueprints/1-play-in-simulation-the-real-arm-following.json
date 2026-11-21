@@ -3,10 +3,10 @@
         "kind": "blueprint",
         "flow_id": 9
     },
-    "name": "0 · Play in simulation, the real arm following",
+    "name": "1 · Play in simulation, the real arm following",
     "description": "Checks that the xArm answers and is healthy, then moves it one joint at a time, slowly, from the View: J1 − … J6 +, Back to start, Stop.",
     "published_version": 8,
-    "updated": "2026-11-18 23:58:46",
+    "updated": "2026-11-21 19:34:12",
     "graph": {
         "nodes": [
             {

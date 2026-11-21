@@ -12,16 +12,16 @@
     "readme": null,
     "blueprints": [
         {
-            "name": "0 · Play in simulation, the real arm following",
-            "file": "blueprints/0-play-in-simulation-the-real-arm-following.json",
-            "published_version": 8,
-            "nodes": 17
-        },
-        {
             "name": "0b · Repair a joint (encoder error, zero)",
             "file": "blueprints/0b-repair-a-joint-encoder-error-zero.json",
             "published_version": 5,
             "nodes": 6
+        },
+        {
+            "name": "1 · Play in simulation, the real arm following",
+            "file": "blueprints/1-play-in-simulation-the-real-arm-following.json",
+            "published_version": 8,
+            "nodes": 17
         },
         {
             "name": "1 · Print the board",
@@ -62,11 +62,6 @@
     ],
     "blocks": [
         {
-            "id": "ws-tic-tac-toe-game",
-            "version": 7,
-            "name": "Tic-tac-toe game"
-        },
-        {
             "id": "ws-xarm-joint-repair",
             "version": 5,
             "name": "xArm joint repair"
@@ -75,6 +70,11 @@
             "id": "ws-step-by-step-guide",
             "version": 2,
             "name": "Step-by-step guide"
+        },
+        {
+            "id": "ws-tic-tac-toe-game",
+            "version": 7,
+            "name": "Tic-tac-toe game"
         },
         {
             "id": "ws-board-sheet",
