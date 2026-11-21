@@ -18,10 +18,10 @@
 
 ## Flows
 
-- **0b · Repair a joint (encoder error, zero)**: UFACTORY's procedure for a joint's S17/S18 encoder error and its zero, step by step with buttons, for an arm without Studio's Joint debug page. Starts in rehearsal: set Robot to real xArm when ready.
 - **1 · Play in simulation, the real arm following**: Checks that the xArm answers and is healthy, then moves it one joint at a time, slowly, from the View: J1 − … J6 +, Back to start, Stop.
-- **1 · Print the board**: The A4 sheet with the four markers the camera finds the board by. Print it at 100%.
+- **2 · Repair a joint (encoder error, zero)**: UFACTORY's procedure for a joint's S17/S18 encoder error and its zero, step by step with buttons, for an arm without Studio's Joint debug page. Starts in rehearsal: set Robot to real xArm when ready.
 - **2 · Train the board reader (simulation + rendered cells)**: Synthetic cells into the cells-synthetic dataset, then a CNN that reads empty, X or O, trained on the accelerator; the model goes to the models dataset.
+- **3 · Print the board**: The A4 sheet with the four markers the camera finds the board by. Print it at 100%.
 - **3 · Train the player by self-play**: Thousands of games against itself on the accelerator, tested against a random and a perfect player as it learns; the model goes to the models dataset.
 - **4 · Calibrate the arm and the camera**: The pen touches the board's four corners (dry run first), and the camera checks it finds and straightens the board.
 - **5 · Play (simulation or the real xArm)**: The robot plays the visitor: camera and board reader see the visitor's moves, the player network chooses the robot's, the arm draws. Your move, New game and Stop are in the View.
@@ -30,7 +30,7 @@
 ## What you need
 
 - A computer with the EsaSim worker (Project > Compute); it runs on any worker, faster with: NVIDIA GPU, Tenstorrent.
-- Python packages, installed by the worker the first time: `xarm-python-sdk`, `opencv-python-headless>=4.7`, `numpy`, `torch`, `pillow`.
+- Python packages, installed by the worker the first time: `opencv-python-headless>=4.7`, `numpy`, `torch`, `xarm-python-sdk`, `pillow`.
 
 ## How to run it
 
@@ -40,7 +40,7 @@
 
 ## What you get
 
-- On the **View** page: *xArm 6 model (esacode)* (1 · Play in simulation, the real arm following), *Arm data for the views* (0b · Repair a joint (encoder error, zero)), *Repair, step by step* (0b · Repair a joint (encoder error, zero)), *The arm as it reads now* (0b · Repair a joint (encoder error, zero)), *Joints* (0b · Repair a joint (encoder error, zero)), *models (reader.pt, player.pt)* (1 · Play in simulation, the real arm following), *Visitor* (1 · Play in simulation, the real arm following), *What the robot says* (1 · Play in simulation, the real arm following), *Robot voice* (1 · Play in simulation, the real arm following), *Camera pictures* (1 · Play in simulation, the real arm following), *The board as the robot reads it* (1 · Play in simulation, the real arm following), *Robot data for the 3D view* (1 · Play in simulation, the real arm following).
+- On the **View** page: *models (reader.pt, player.pt)* (1 · Play in simulation, the real arm following), *xArm 6 model (esacode)* (1 · Play in simulation, the real arm following), *Visitor* (1 · Play in simulation, the real arm following), *What the robot says* (1 · Play in simulation, the real arm following), *Robot voice* (1 · Play in simulation, the real arm following), *Camera pictures* (1 · Play in simulation, the real arm following), *The board as the robot reads it* (1 · Play in simulation, the real arm following), *Robot data for the 3D view* (1 · Play in simulation, the real arm following), *xArm 3D view (digital twin)* (1 · Play in simulation, the real arm following), *Thinking* (1 · Play in simulation, the real arm following), *The network's score for each free cell* (1 · Play in simulation, the real arm following), *Reading* (1 · Play in simulation, the real arm following).
 
 <!-- esasim: files of the project -->
 
@@ -50,10 +50,10 @@ An [EsaSim](https://esacode.com/) project of the workspace Gianluca De Novi's wo
 
 ### Blueprints in this repository
 
-- [0b · Repair a joint (encoder error, zero)](blueprints/0b-repair-a-joint-encoder-error-zero.json) · 6 blocks · version 5
 - [1 · Play in simulation, the real arm following](blueprints/1-play-in-simulation-the-real-arm-following.json) · 17 blocks · version 8
-- [1 · Print the board](blueprints/1-print-the-board.json) · 2 blocks
+- [2 · Repair a joint (encoder error, zero)](blueprints/2-repair-a-joint-encoder-error-zero.json) · 6 blocks · version 5
 - [2 · Train the board reader (simulation + rendered cells)](blueprints/2-train-the-board-reader-simulation-rendered-cells.json) · 14 blocks · version 3
+- [3 · Print the board](blueprints/3-print-the-board.json) · 2 blocks
 - [3 · Train the player by self-play](blueprints/3-train-the-player-by-self-play.json) · 6 blocks · version 2
 - [4 · Calibrate the arm and the camera](blueprints/4-calibrate-the-arm-and-the-camera.json) · 8 blocks
 - [5 · Play (simulation or the real xArm)](blueprints/5-play-simulation-or-the-real-xarm.json) · 18 blocks · version 8
@@ -61,14 +61,14 @@ An [EsaSim](https://esacode.com/) project of the workspace Gianluca De Novi's wo
 
 ### Workspace blocks it uses
 
+- [Tic-tac-toe game](blocks/ws-tic-tac-toe-game) · version 7
 - [xArm joint repair](blocks/ws-xarm-joint-repair) · version 5
 - [Step-by-step guide](blocks/ws-step-by-step-guide) · version 2
-- [Tic-tac-toe game](blocks/ws-tic-tac-toe-game) · version 7
-- [Board sheet](blocks/ws-board-sheet) · version 2
 - [xArm model](blocks/ws-xarm-6-model) · version 2
 - [Simulate games](blocks/ws-simulate-games) · version 1
 - [Render cells](blocks/ws-render-cells) · version 1
 - [Train cell reader](blocks/ws-train-cell-reader) · version 2
+- [Board sheet](blocks/ws-board-sheet) · version 2
 - [Train player by self-play](blocks/ws-train-player-by-self-play) · version 2
 - [Read board](blocks/ws-read-board) · version 2
 - [xArm teach and repeat](blocks/ws-xarm-teach-and-repeat) · version 2
